@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfleet Voice Log System (Local)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Starfleet Console Background Image */
+            background-image: url('https://cdn.pixabay.com/photo/2016/10/20/18/35/earth-1756274_960_720.jpg');
+            background-size: cover; /* Ensure it covers the whole screen */
+            background-attachment: fixed; /* Fix the image so content scrolls over it */
+            background-position: center; /* Center the image */
+        }
+        /* LCARS-inspired Cyan Glow */
+        .lcars-text {
+            color: #00ffff; /* Cyan */
+            text-shadow: 0 0 5px #00ffff, 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+        .lcars-bg-accent {
+            background-color: #007799;
+            box-shadow: 0 0 8px #00ffff;
+        }
+        .lcars-border {
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+        .lcars-button {
+            transition: all 0.2s;
+            background-color: #007799;
+            color: #ffffff;
+            border: 1px solid #00ffff;
+            text-shadow: 0 0 2px #ffffff;
+        }
+        .lcars-button:hover:not(:disabled) {
+            background-color: #0099cc;
+            box-shadow: 0 0 15px #00ffff;
+        }
+        .lcars-button:disabled {
+            opacity: 0.1;
+            cursor: not-allowed;
+        }
+        .log-entry {
+            border-left: 5px solid #00ffff;
+        }
+        /* Custom scrollbar for log area */
+        #logEntries::-webkit-scrollbar {
+            width: 8px;
+        }
+        #logEntries::-webkit-scrollbar-thumb {
+            background-color: #00ffff;
+            border-radius: 4px;
+        }
+        #logEntries::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-10">
+
+    <div id="appContainer" class="max-w-4xl mx-auto rounded-xl p-6 md:p-10 shadow-2xl bg-gray-900 border border-cyan-800">
+        <!-- Title & Status -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-extrabold lcars-text tracking-widest uppercase">
+                STARFLEET LOG SYSTEM
+            </h1>
+            <p class="text-lg lcars-text mt-2 font-medium">Captain's Log Supplement</p>
+        </header>
+
+        <!-- Input Panel (The Console) -->
+        <section class="mb-8 p-6 lcars-border rounded-lg bg-gray-800">
+            <h2 class="text-xl font-bold mb-4 text-white">RECORD NEW ENTRY</h2>
+
+            <div class="space-y-4">
+                <!-- Text Input -->
+                <textarea id="logText" class="w-full p-3 rounded bg-gray-700 text-white border-b-2 border-cyan-400 focus:outline-none focus:border-cyan-600 resize-none h-32" placeholder="Record your observations, Captain..." maxlength="1000"></textarea>
+
+                <!-- Audio Status and Controls -->
+                <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div id="audioStatus" class="flex-grow text-lg font-medium lcars-text">Status: Ready</div>
+                    
+                    <button id="recordButton" class="lcars-button px-6 py-3 rounded-full font-bold flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+                        <span>Start Recording</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <button id="saveButton" class="lcars-button w-full mt-6 px-6 py-3 rounded font-bold uppercase disabled:opacity-50" disabled>
+                Stardate Log: Transmit
+            </button>
+        </section>
+
+        <!-- Log Display Area -->
+        <section class="p-6 lcars-border rounded-lg bg-gray-800">
+            <h2 class="text-xl font-bold mb-4 text-white">LOCAL LOG ARCHIVES</h2>
+            <!-- Note: User ID is simulated with a random local ID since authentication is removed -->
+            <div class="text-sm text-cyan-300 mb-2">Local Console ID: <span id="userIdDisplay" class="font-mono text-xs italic">Initializing...</span></div>
+            <div id="logEntries" class="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- Log entries will be inserted here -->
+                <p id="loadingMessage" class="lcars-text text-center pt-10">Accessing Local Archive... Stand by.</p>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Custom Modal for Messages (Instead of alert()) -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 lcars-border rounded-lg p-6 w-full max-w-sm text-white shadow-lg">
+            <h3 id="modalTitle" class="text-xl font-bold lcars-text mb-3">Message</h3>
+            <p id="modalBody" class="mb-6"></p>
+            <button onclick="document.getElementById('modal').classList.add('hidden');" class="lcars-button w-full px-4 py-2 rounded">
+                Acknowledge
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- System Configuration ---
+        const LOCAL_STORAGE_KEY = 'starfleetLogs';
+        const LOCAL_USER_ID_KEY = 'localUserId';
+        
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+        let startTime;
+
+        // UI elements
+        const recordButton = document.getElementById('recordButton');
+        const saveButton = document.getElementById('saveButton');
+        const audioStatus = document.getElementById('audioStatus');
+        const logTextarea = document.getElementById('logText');
+        const logEntriesDiv = document.getElementById('logEntries');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+
+        // Initialize or retrieve a local console ID
+        let localUserId = localStorage.getItem(LOCAL_USER_ID_KEY);
+        if (!localUserId) {
+            localUserId = crypto.randomUUID();
+            localStorage.setItem(LOCAL_USER_ID_KEY, localUserId);
+        }
+        userIdDisplay.textContent = localUserId;
+
+        // Helper function for showing custom modal messages
+        function showModal(title, message) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').textContent = message;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        // --- Utility Functions ---
+
+        // Simple Stardate-like format (Date YYYYMM.DayHourMinute)
+        function getStardate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hour = now.getHours().toString().padStart(2, '0');
+            const minute = now.getMinutes().toString().padStart(2, '0');
+            return `${year}${month}.${day}${hour}${minute}`;
+        }
+
+        // Base64 conversion (needed for storing binary audio data)
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    // Check if the result is valid
+                    if (reader.result && typeof reader.result === 'string') {
+                        resolve(reader.result.split(',')[1]);
+                    } else {
+                        reject(new Error("Failed to read blob as Base64."));
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // Base64 to ArrayBuffer (needed for playing back the audio)
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        // --- LocalStorage Data Management ---
+
+        function getLocalLogs() {
+            try {
+                const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error("Error retrieving logs from local storage:", e);
+                return [];
+            }
+        }
+
+        function saveLocalLogs(logs) {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(logs));
+                // Reload the logs to update the display
+                renderLogEntries(logs);
+            } catch (e) {
+                console.error("Error saving logs to local storage:", e);
+                showModal("Storage Error", "The log system ran out of local storage space. Please clear some entries.");
+            }
+        }
+        
+        // --- Voice Recording Logic ---
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Check for compatible audio format, favoring Opus codec for better compatibility (Firefox support)
+                let mimeType = 'audio/webm';
+                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                    mimeType = 'audio/webm;codecs=opus';
+                } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+                    mimeType = 'audio/ogg;codecs=opus';
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+                audioChunks = [];
+                startTime = Date.now();
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    // Use the actual MIME type the recorder settled on for the Blob
+                    audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' }); 
+                    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                    audioStatus.textContent = `Status: Recording complete. Duration: ${duration}s. Ready to Transmit.`;
+                    recordButton.textContent = 'Retake Log';
+                    recordButton.classList.remove('bg-red-600', 'animate-pulse');
+                    recordButton.classList.add('bg-gray-600');
+                    saveButton.disabled = false;
+                    stream.getTracks().forEach(track => track.stop()); // Stop mic usage
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.textContent = 'Recording... STOP';
+                recordButton.classList.remove('lcars-button');
+                recordButton.classList.add('bg-red-600', 'animate-pulse', 'px-6', 'py-3', 'rounded-full', 'font-bold');
+                audioStatus.textContent = 'Status: Recording (Note: Large files may exceed local storage limits)';
+                saveButton.disabled = true;
+
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+                showModal("Mic Access Denied", "Access to the microphone is required for voice logs. Please check your browser permissions.");
+                audioStatus.textContent = 'Status: Microphone Access Required';
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        }
+
+        // --- Save Log Entry to Local Storage ---
+
+        saveButton.addEventListener('click', async () => {
+            if (!audioBlob) {
+                showModal("Transmit Error", "Log data is not ready. Please record an entry.");
+                return;
+            }
+
+            const text = logTextarea.value.trim();
+            if (!text) {
+                showModal("Log Incomplete", "Please enter text for the log entry.");
+                return;
+            }
+
+            saveButton.textContent = 'Transmitting...';
+            saveButton.disabled = true;
+
+            try {
+                // 1. Convert Audio Blob to Base64 String
+                const audioBase64 = await blobToBase64(audioBlob);
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                const newLog = {
+                    id: crypto.randomUUID(), // Unique ID for local log entry
+                    stardate: getStardate(),
+                    logText: text,
+                    audioBase64: audioBase64,
+                    audioMimeType: audioBlob.type, 
+                    duration: parseFloat(duration),
+                    timestamp: new Date().toISOString(), // Use ISO string for local sorting
+                };
+
+                // 2. Save to Local Storage
+                const logs = getLocalLogs();
+                logs.unshift(newLog); // Add to the beginning (newest first)
+                saveLocalLogs(logs);
+
+                // 3. Reset UI
+                logTextarea.value = '';
+                audioBlob = null;
+                audioStatus.textContent = 'Status: Entry successfully archived locally.';
+                recordButton.textContent = 'Start Recording';
+                recordButton.classList.remove('bg-gray-600');
+                recordButton.classList.add('lcars-button');
+                saveButton.textContent = 'Stardate Log: Transmit';
+                saveButton.disabled = true;
+
+                showModal("Transmission Complete", `Captain's Log ${newLog.stardate} recorded and archived locally.`);
+
+            } catch (error) {
+                console.error("Error saving log entry:", error);
+                showModal("Transmission Failure", `Could not archive log entry. Potential storage limit exceeded or conversion error: ${error.message}`);
+                saveButton.textContent = 'Transmission FAILED';
+                saveButton.disabled = false;
+            }
+        });
+
+
+        // --- Data Rendering ---
+
+        function createLogEntryElement(data) {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'log-entry p-4 rounded bg-gray-700 shadow-md';
+
+            const stardateHeader = document.createElement('p');
+            stardateHeader.className = 'lcars-text text-sm font-bold mb-1';
+            stardateHeader.textContent = `LOG SUPPLEMENT: ${data.stardate}`;
+
+            const textContent = document.createElement('p');
+            textContent.className = 'text-gray-300 text-sm mb-3 whitespace-pre-wrap';
+            textContent.textContent = data.logText;
+
+            const audioControls = document.createElement('div');
+            audioControls.className = 'flex items-center space-x-3';
+
+            const durationSpan = document.createElement('span');
+            durationSpan.className = 'text-xs text-cyan-400 font-mono';
+            durationSpan.textContent = `[Audio Duration: ${data.duration ? data.duration + 's' : 'Unknown'}]`;
+
+            const playButton = document.createElement('button');
+            playButton.className = 'px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-full transition-colors flex items-center space-x-1';
+            playButton.innerHTML = `<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg> <span>Playback</span>`;
+            
+            playButton.onclick = () => {
+                try {
+                    if (data.audioBase64) {
+                        const arrayBuffer = base64ToArrayBuffer(data.audioBase64);
+                        // Use the stored MIME type for correct Blob creation
+                        const blobType = data.audioMimeType || 'audio/webm';
+                        const blob = new Blob([arrayBuffer], { type: blobType }); 
+                        const audioUrl = URL.createObjectURL(blob);
+                        const audio = new Audio(audioUrl);
+                        
+                        playButton.textContent = 'Playing...';
+                        playButton.disabled = true;
+
+                        audio.onended = () => {
+                            playButton.textContent = 'Playback';
+                            playButton.disabled = false;
+                            URL.revokeObjectURL(audioUrl);
+                        };
+
+                        audio.onerror = (e) => {
+                            console.error("Audio playback error:", e);
+                            playButton.textContent = 'Playback Failed';
+                            playButton.disabled = false;
+                            showModal("Audio Error", "The audio file could not be played. It may be corrupt.");
+                            URL.revokeObjectURL(audioUrl);
+                        };
+
+                        audio.play();
+                    } else {
+                        showModal("Audio Missing", "No audio data found for this log entry.");
+                    }
+                } catch (e) {
+                    console.error("Playback setup error:", e);
+                    showModal("Playback Error", "An error occurred setting up audio playback.");
+                }
+            };
+
+            audioControls.appendChild(playButton);
+            audioControls.appendChild(durationSpan);
+
+            entryDiv.appendChild(stardateHeader);
+            entryDiv.appendChild(textContent);
+            entryDiv.appendChild(audioControls);
+
+            return entryDiv;
+        }
+        
+        function renderLogEntries(logs) {
+            logEntriesDiv.innerHTML = ''; // Clear existing entries
+            document.getElementById('loadingMessage')?.remove();
+
+            if (logs.length === 0) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.className = 'text-gray-400 text-center italic pt-10';
+                emptyMsg.textContent = 'No local log entries found. Begin recording your mission.';
+                logEntriesDiv.appendChild(emptyMsg);
+                return;
+            }
+
+            // Logs are already sorted newest first due to unshift in saveLogToLocalStorage
+            logs.forEach(data => {
+                logEntriesDiv.appendChild(createLogEntryElement(data));
+            });
+        }
+
+        // --- Start Application ---
+        // Load and render existing logs on startup
+        renderLogEntries(getLocalLogs());
+
+    </script>
+</body>
+</html>

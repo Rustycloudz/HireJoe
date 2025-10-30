@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Designer: HSL Color Palette Generator</title>
+    <!-- Using Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* Define global CSS variables for the color palette */
+        :root {
+            --color-h1: 210;
+            --color-s1: 80%;
+            --color-l1: 60%;
+            --color-h2: 240;
+            --color-s2: 70%;
+            --color-l2: 75%;
+            --color-h3: 180;
+            --color-s3: 50%;
+            --color-l3: 40%;
+            --color-h4: 300;
+            --color-s4: 90%;
+            --color-l4: 50%;
+            --color-h5: 0;
+            --color-s5: 10%;
+            --color-l5: 95%; /* Near-white background/neutral */
+
+            --font-main: 'Inter', sans-serif;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --neon-glow: 0 0 15px hsla(var(--color-h1), 80%, 60%, 0.7);
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: #1f2937;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: all 0.5s ease;
+            
+            /* NEW BACKGROUND IMAGE STYLES */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)), 
+                url('https://cdn.pixabay.com/photo/2020/10/14/20/31/paint-5655421_960_720.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Keeps the background static */
+            background-color: #eee; /* Fallback */
+            /* END NEW STYLES */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 600px;
+            width: 100%;
+            /* Added background for legibility */
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.85); 
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            color: #3b82f6; /* Static blue for readability */
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .controls {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+
+        input[type="color"], input[type="text"] {
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #d1d5db;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            outline: none;
+        }
+
+        input[type="color"] {
+            height: 48px;
+            width: 100%;
+            cursor: pointer;
+            padding: 4px;
+            border: 2px solid #d1d5db;
+        }
+
+        .palette-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .color-card {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 20px;
+            border-radius: 12px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            /* Removed cursor: pointer to rely on buttons for click action */
+        }
+
+        .color-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-card:nth-child(1) {
+            background-color: hsl(var(--color-h1), var(--color-s1), var(--color-l1));
+            color: var(--text-color-1, #fff);
+        }
+        .color-card:nth-child(2) {
+            background-color: hsl(var(--color-h2), var(--color-s2), var(--color-l2));
+            color: var(--text-color-2, #fff);
+        }
+        .color-card:nth-child(3) {
+            background-color: hsl(var(--color-h3), var(--color-s3), var(--color-l3));
+            color: var(--text-color-3, #fff);
+        }
+        .color-card:nth-child(4) {
+            background-color: hsl(var(--color-h4), var(--color-s4), var(--color-l4));
+            color: var(--text-color-4, #fff);
+        }
+        .color-card:nth-child(5) {
+            background-color: hsl(var(--color-h5), var(--color-s5), var(--color-l5));
+            color: var(--text-color-5, #1f2937); /* Neutral needs dark text */
+        }
+
+        .color-info {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .color-value {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            font-family: monospace;
+            margin-top: 4px;
+        }
+
+        .button-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .copy-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: inherit; /* Inherit text color from card for contrast */
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            flex-grow: 1;
+        }
+        
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .copy-hex-btn {
+            opacity: 0.9;
+        }
+
+        .copy-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            font-weight: 600;
+            z-index: 100;
+        }
+
+        .copy-message.show {
+            opacity: 1;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .palette-container {
+                grid-template-columns: 1fr;
+            }
+            .color-card {
+                min-height: 150px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .button-group {
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CSS Palette Designer</h1>
+        <p class="subtitle">Enter a base HEX color and let the Vulcan logic generate a balanced 5-color palette for your next web app.</p>
+    </header>
+
+    <div class="controls">
+        <div class="input-group">
+            <label for="base-color-picker">Select Base Color (HEX)</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="color" id="base-color-picker" value="#3b82f6" oninput="updateHexInput(this.value)">
+                <input type="text" id="base-color-input" value="#3b82f6" maxlength="7" oninput="updateColorPicker(this.value)">
+            </div>
+        </div>
+        <button id="generate-button" class="action-button" onclick="generatePalette()">Generate Palette</button>
+    </div>
+
+    <div class="palette-container" id="palette-container">
+        <!-- Color cards will be generated/updated here -->
+    </div>
+
+    <div id="copy-message" class="copy-message">Copied!</div>
+
+    <script>
+        // Global references
+        const root = document.documentElement;
+        const colorInput = document.getElementById('base-color-input');
+        const colorPicker = document.getElementById('base-color-picker');
+        const paletteContainer = document.getElementById('palette-container');
+        const copyMessage = document.getElementById('copy-message');
+
+        // --- Utility Functions for Color Math ---
+
+        /**
+         * Converts an HSL color to a standard CSS HSL string.
+         * @param {number} h Hue (0-360)
+         * @param {number} s Saturation (0-100)
+         * @param {number} l Lightness (0-100)
+         * @returns {string} The CSS HSL string.
+         */
+        const hslToString = (h, s, l) => `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`;
+
+        /**
+         * Converts a Hex color string (e.g., #FF9900) to HSL values.
+         * @param {string} hex The hex color string.
+         * @returns {{h: number, s: number, l: number} | null} The HSL object or null on failure.
+         */
+        function hexToHsl(hex) {
+            // Check for valid hex format and sanitize
+            if (!/^#?([a-f\d]{3}){1,2}$/i.test(hex)) return null;
+
+            hex = hex.replace(/^#/, '');
+
+            if (hex.length === 3) {
+                hex = hex.split('').map(char => char + char).join('');
+            }
+
+            const r = parseInt(hex.substring(0, 2), 16) / 255;
+            const g = parseInt(hex.substring(2, 4), 16) / 255;
+            const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0; // achromatic
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+
+            return {
+                h: h * 360,
+                s: s * 100,
+                l: l * 100
+            };
+        }
+
+        /**
+         * Converts HSL to Hex. Used for display.
+         * @param {number} h Hue (0-360)
+         * @param {number} s Saturation (0-100)
+         * @param {number} l Lightness (0-100)
+         * @returns {string} The HEX color string.
+         */
+        function hslToHex(h, s, l) {
+            s /= 100;
+            l /= 100;
+
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+            let r = 0, g = 0, b = 0;
+
+            if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+            else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+            else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+            else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+            else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+            else if (h >= 300 && h < 360) { r = c; g = 0; b = x; }
+
+            const toHex = (c) => {
+                const hex = Math.round((c + m) * 255).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            };
+
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        /**
+         * Converts HSL to RGBA string.
+         * @param {number} h Hue (0-360)
+         * @param {number} s Saturation (0-100)
+         * @param {number} l Lightness (0-100)
+         * @param {number} a Alpha (0-1), default 1.
+         * @returns {string} The RGBA color string.
+         */
+        function hslToRgba(h, s, l, a = 1) {
+            s /= 100;
+            l /= 100;
+
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+            let r = 0, g = 0, b = 0;
+
+            if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+            else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+            else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+            else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+            else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+            else if (h >= 300 && h < 360) { r = c; g = 0; b = x; }
+
+            const r255 = Math.round((r + m) * 255);
+            const g255 = Math.round((g + m) * 255);
+            const b255 = Math.round((b + m) * 255);
+
+            return `rgba(${r255}, ${g255}, ${b255}, ${a.toFixed(2)})`; // Use toFixed(2) for cleaner alpha display
+        }
+
+
+        /**
+         * Determines if text should be light or dark based on lightness (L) value.
+         * @param {number} l Lightness (0-100)
+         * @returns {string} Text color ('#fff' or '#1f2937')
+         */
+        function getTextColor(l) {
+            return l < 55 ? '#fff' : '#1f2937';
+        }
+
+        // --- Input Handlers ---
+
+        function updateHexInput(hex) {
+            colorInput.value = hex.toUpperCase();
+        }
+
+        function updateColorPicker(hex) {
+            // Simple validation before updating the picker
+            if (/^#?([a-f\d]{3}){1,2}$/i.test(hex)) {
+                colorPicker.value = hex.startsWith('#') ? hex : `#${hex}`;
+            }
+        }
+
+        // --- Core Palette Generation Logic ---
+
+        function generatePalette() {
+            const hex = colorInput.value;
+            const baseHsl = hexToHsl(hex);
+
+            if (!baseHsl) {
+                console.error("Invalid Hex color input.");
+                colorInput.style.borderColor = 'red';
+                return;
+            }
+
+            colorInput.style.borderColor = '#d1d5db'; // Reset border
+
+            const { h, s, l } = baseHsl;
+
+            // Enforce "decent and in order" logic for palette generation (Vulcan logic)
+            const palette = [
+                // 1. Primary Base (Direct Vibe)
+                { h: h, s: s, l: l, name: "Primary Vibe" },
+
+                // 2. Analogous Accent (Harmony Shift: +30 degrees hue, slightly higher saturation)
+                { h: (h + 30) % 360, s: Math.min(s + 10, 100), l: l, name: "Harmonic Accent" },
+
+                // 3. Complementary Deep (Contrast & Depth: Opposite hue, reduced lightness for depth)
+                { h: (h + 180) % 360, s: Math.min(s + 5, 100), l: Math.max(l * 0.55, 15), name: "Deep Contrast" },
+
+                // 4. Tinted Light (UI Backgrounds/Highlights: Base hue, high lightness, slightly desaturated)
+                { h: h, s: Math.min(s * 0.7, 50), l: Math.min(l + 30, 90), name: "UI Tint/Highlight" },
+
+                // 5. Neutral (Text/Background: Near-white, low saturation)
+                { h: h, s: Math.min(s * 0.1, 10), l: 95, name: "Neutral Base" }
+            ];
+
+            applyPaletteToCSS(palette);
+            renderPaletteCards(palette);
+        }
+
+        /**
+         * Applies the generated palette to CSS root variables.
+         * @param {Array<Object>} palette The 5-color palette array.
+         */
+        function applyPaletteToCSS(palette) {
+            palette.forEach((color, index) => {
+                const i = index + 1;
+                // Set HSL variables for CSS
+                root.style.setProperty(`--color-h${i}`, Math.round(color.h));
+                root.style.setProperty(`--color-s${i}`, `${Math.round(color.s)}%`);
+                root.style.setProperty(`--color-l${i}`, `${Math.round(color.l)}%`);
+
+                // Determine and set text contrast color for each card
+                root.style.setProperty(`--text-color-${i}`, getTextColor(color.l));
+            });
+        }
+
+        /**
+         * Renders the color cards based on the generated palette.
+         * @param {Array<Object>} palette The 5-color palette array.
+         */
+        function renderPaletteCards(palette) {
+            paletteContainer.innerHTML = ''; // Clear previous cards
+
+            palette.forEach((color, index) => {
+                const i = index + 1;
+                const hslValue = hslToString(color.h, color.s, color.l);
+                const hexValue = hslToHex(color.h, color.s, color.l).toUpperCase();
+                const rgbaValue = hslToRgba(color.h, color.s, color.l); 
+                const textColor = getTextColor(color.l);
+
+                const card = document.createElement('div');
+                card.className = 'color-card';
+                card.style.cssText = `
+                    background-color: ${hslValue};
+                    color: ${textColor};
+                `;
+                card.innerHTML = `
+                    <div class="color-info">${color.name} (P${i})</div>
+                    <div class="color-value">HEX: ${hexValue}</div>
+                    <div class="color-value">HSL: ${hslValue}</div>
+                    <div class="color-value">RGBA: ${rgbaValue}</div>
+                    <div class="button-group">
+                        <button class="copy-btn" data-copy-value="${rgbaValue}">Copy RGBA</button>
+                        <button class="copy-btn copy-hex-btn" data-copy-value="${hexValue}">Copy HEX</button>
+                    </div>
+                `;
+                // Note: The card itself is no longer directly clickable for copying.
+                paletteContainer.appendChild(card);
+            });
+        }
+
+        /**
+         * Handles copying the color value to the clipboard and shows a message.
+         * @param {string} value The color value to copy.
+         */
+        function handleClick(value) {
+            // Using execCommand for wider compatibility in iframe environments
+            const tempInput = document.createElement('textarea');
+            tempInput.value = value;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // Show copy message
+            copyMessage.textContent = `${value} Copied!`;
+            copyMessage.classList.add('show');
+            setTimeout(() => {
+                copyMessage.classList.remove('show');
+            }, 1000);
+        }
+
+        // --- Initialization and Event Delegation ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial generation of the palette using the default color
+            generatePalette();
+
+            // Use event delegation on the container to handle all copy button clicks
+            paletteContainer.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('copy-btn')) {
+                    const valueToCopy = target.getAttribute('data-copy-value');
+                    if (valueToCopy) {
+                        handleClick(valueToCopy);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joe's Resume and Blog</title>
+
+    <style>
+        /* Core Reset and Typography */
+        body {
+            font-family: 'URW Chancery L, cursive';
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: rgba(168, 197, 199, 0.68); /* Deep, Calm background */
+            color: #004;
+        }
+
+        h1, h2, h3 {
+            color: #502826 /* A Deep Contrast */
+            margin-top: 0;
+        }
+
+        /* Header Styling */
+        .header-data {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(63, 102, 151, 0.31);
+            box-shadow: 0 2px 4px rgba(168, 197, 199, 0.86);
+            margin-bottom: 20px;
+        }
+
+        .header-data h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-style: italic;
+            color: rgba(63, 102, 151, 0.95);
+            margin-bottom: 10px;
+        }
+
+        .contact-info a {
+            color: #502826;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        /* Main Layout (Flexbox) */
+        .resume-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            flex: 0 0 250px; /* Fixed width for sidebar */
+            padding-right: 20px;
+            border-right: 1px solid #ddd;
+        }
+
+        .sidebar h2 {
+            border-bottom: 2px solid #3F6697;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 10px 0;
+            color: rgba(80, 40, 38, 1.00);
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+
+        .nav-link:hover {
+            background-color: #A8C5C7;
+            padding-left: 5px;
+        }
+
+        .nav-link.active {
+            background-color: #A8C5C7;
+            color: white;
+            font-weight: bold;
+            padding-left: 10px;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex-grow: 1; /* Takes up remaining space */
+            padding-left: 40px;
+        }
+
+        .resume-section {
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #004;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .resume-section:last-child {
+            border-bottom: none;
+        }
+
+        .job-entry, .education-entry, .project-entry {
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 3px solid #3F6697;
+        }
+
+        .dates {
+            font-style: italic;
+            color: rgba(80, 40, 38, 0.31);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        /* Interactivity (Visibility Control) */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-data">
+        <h1>Joe "Rusty" Latam</h1>
+        <p class="tagline">An Outside-the-box Software Developer</p>
+        <nav class="contact-info">
+            <a href="mailto:jralatam@gmail.com">Email</a> |
+            <a href="https://www.linkedin.com/in/rusty-latam-939206338/" target="_blank">LinkedIn</a> |
+            <a href="https://github.com/Rustycloudz" target="_blank">GitHub</a> |
+            <span>Ontario, Canada</span>
+        </nav>
+    </header>
+
+    <main class="resume-container">
+        <aside class="sidebar">
+            <h2>Sections</h2>
+            <ul class="nav-list">
+                <li><a href="#" class="nav-link active" data-target="summary">Summary</a></li>
+                <li><a href="#" class="nav-link" data-target="experience">My Approach</a></li>
+                <li><a href="#" class="nav-link" data-target="projects">Projects</a></li>
+                <li><a href="#" class="nav-link" data-target="skills">Skills</a></li>
+                <li><a href="#" class="nav-link" data-target="education">Education</a></li>
+            </ul>
+        </aside>
+
+        <section class="content-area">
+
+            <article class="resume-section active" data-section="summary">
+                <h2>Professional Summary</h2>
+                <p>Highly motivated professional transitioning into a non-trades sector, demonstrating rapid skill
+acquisition through a focused micro-credential program. Proficient in Intermediate
+Python, Prompt Engineering, and Generative AI/LLMs (25 certifications in 2025 {not all listed on
+resume}). Experienced in Python Debugging, Linux (Ubuntu), and emerging decentralized technologies
+(Cryptocurrencies, DePINs). Seeking a role where I can leverage my accelerated learning to contribute to
+a cleaner planet and sustainable solutions for the future.</p>
+            </article>
+
+            <article class="resume-section hidden" data-section="experience">
+                <h2>Why AI and Micro-Credentials?</h2>
+                <div class="job-entry">
+                    <h3>The Kaizen Mandate: Rapid, Adaptive Skill Deployment in AI & Advanced Systems</h3>
+                    <p>This portfolio is not defined by a static list of credentials, but by a high-velocity, continuously iterated process of knowledge acquisition. This methodology demonstrates a strategic commitment to applied competence and adaptive capacity unmatched by generalized academic paths, positioning the candidate as a talent asset optimized for immediate integration and perpetual relevance.</p>
+                    <h4>Strategic Velocity and Deployment Guarantee</h4>
+                    <p>This structure converts learning into a measurable output, designed to maximize immediate utility and minimize organizational overhead.
+
+Zero-Risk Skill Validation: The accumulation of certified competencies serves as a verifiable benchmark of focus and mastery. This systematic approach significantly reduces the deployment risk and guarantees unparalleled speed-to-impact compared to candidates relying solely on abstract, non-validated experience.
+
+Modular Architecture: The deliberate stacking of specialized credentials proves the ability to quickly assemble and configure complex technical knowledge. This demonstrates the capacity for rapidly mastering any new, complementary skill set essential for a specific role.</p>
+                   <h4>Adaptive Fluency in Next-Generation Systems</h4>
+                   <p>The core value proposition is the ability to master methodology over mere frameworks, ensuring persistent relevance in the volatile technological landscape.
+
+AI Methodological Fluency: The focus on AI/ML micro-credentials proves mastery over data-centric methodologies and the underlying computational principles required for modern software engineering. This foundational understanding allows for the rapid integration and effective utilization of any emerging GenAI tool or proprietary system as needed by the organization.
+
+Critical Operational Differentiator: This continuous, certified learning is the single most reliable predictor of organizational success in a field defined by constant change. The capacity to be rapidly trained to the exact specifications of the firm provides a decisive, future-proof advantage.</p>
+                  
+                   <h4> Continuous Relevance through Perpetual Optimization (Kaizen)</h4>
+                   <p>The candidate is committed to the philosophical and operational practice of Kaizen—the continuous, incremental optimization of capability. This is not simply adaptive behavior; it is a strategic operating mandate.
+
+Proactive Future-Proofing: This discipline of ongoing credentialing demonstrates that the developer is inherently resistant to technical obsolescence.
+
+Strategic Capacity: The hiring of this profile secures an asset whose proven mechanism for rapid specialization ensures the organization will always have the precise, current technical competency required to navigate new market demands and competitive threats.</p>
+                    
+
+
+                
+                </div>
+                </article>
+
+            <article class="resume-section hidden" data-section="projects">
+                <h2>Key Projects (HTML/JS Utilities)</h2>
+                
+                <!-- Existing Project - Enhanced Description -->
+                <div class="project-entry">
+                    <h3>Gamified Task Manager<a href="rhea_3_10_14_25.html">(View Project)</a></h3>
+                    <p class="description">A responsive web application, developed using **HTML, CSS, and vanilla JavaScript**, designed to transform daily chores into a point-based experience. Features user authentication (mock) and real-time task completion tracking. This tool demonstrates proficiency in front-end state management and DOM manipulation.</p>
+                </div>
+                
+                <!-- Updated Project Entry: Color Palette Generator -->
+                <div class="project-entry">
+                    <h3>Optimized Color Palette Generator<a href="styler.html">(View Project)</a></h3>
+                    <p class="description">A client-side utility, leveraging **HTML and advanced HSL color space manipulation in JavaScript**, designed for rapid generation of harmonious, accessible color palettes. It demonstrates advanced understanding of color theory implementation for UI/UX design and features instant HEX/RGB/HSL conversion.</p>
+                </div>
+
+                <!-- Updated Project Entry: Themed Voice Notes Recorder -->
+                <div class="project-entry">
+                    <h3>Themed Voice Notes Recorder<a href="captains_log.html">(View Project)</a></h3>
+                    <p class="description">A browser-based recording utility designed for asynchronous data capture, utilizing the **MediaDevices API** for audio input and local storage for persistence. This project demonstrates direct interaction with browser hardware resources and efficient management of streaming media data within a themed interface, proving competence in low-level web API control.</p>
+                </div>
+
+            </article>
+
+            <article class="resume-section hidden" data-section="skills">
+                <h2>Technical Proficiencies</h2>
+                <div class="skills-list">
+                    <p><strong>Languages:</strong> Python, HTML, Vibe-coding</p>
+                    <p><strong>AI Models Used:</strong> Gemini, CodeGemma, Claude</p>
+                    <p><strong>Tools:</strong> Ollama, Google AI Studio, FeatherPad</p>
+                </div>
+            </article>
+
+            <article class="resume-section hidden" data-section="education">
+                <h2>Certifications</h2>
+                <div class="education-entry">
+                    <h3>Micro-Credentials</h3>
+                    <p> Introductory To Python | Sololearn | 2025<br>
+Python Intermediate | Sololearn | 2025<br>
+SEO with AI | Sololearn | 2025<br>
+Tech for Everyone | Sololearn | 2025<br>
+Think Creatively with AI | Sololearn | 2025<br>
+Brainstorm with AI | Sololearn | 2025<br>
+ML for Beginners | Sololearn | 2025<br>
+Prompt Engineering | Sololearn | 2025<br>
+Write with AI | Sololearn | 2025<br>
+Introduction to LLMs | Sololearn | 2025<br>
+Ethical AI Foundations | Sololearn | 2025<br>
+Project Planning with AI | Sololearn | 2025<br>
+Visualize Your Data | Sololearn | 2025<br>
+AI-Powered A/B Testing | Sololearn | 2025<br>
+Data Literacy with AI | Sololearn | 2025<br>
+Social Media Marketting with AI | Sololearn | 2025<br>
+Bitcoin for Beginners | App-Learning GmbH | 2024<br>
+XRP Ledger 464 | EasyA | 2025<br>
+XRP Ledger 121 | EasyA | 2025<br>
+XRP Ledger 433 | EasyA | 2025<br>
+XRP Ledger 472 | EasyA | 2025<br>
+XRP Ledger 244 | EasyA | 2025<br>
+SKILL DOTS608 (Introductory to Polkadot Ecosystem) | EasyA | 2024</p>
+                </div>
+            </article>
+
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tuvok's logic dictates that the elements must be correctly identified.
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.resume-section');
+
+            // Data suggests that an iterative approach is the most efficient.
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    // Prevent default link behavior, maintaining single-page state.
+                    event.preventDefault();
+
+                    const targetSectionData = this.getAttribute('data-target');
+
+                    // Deactivate all links and hide all sections.
+                    // This ensures only one section is active at any time.
+                    navLinks.forEach(n => n.classList.remove('active'));
+                    sections.forEach(s => s.classList.add('hidden'));
+
+                    // Activate the clicked link.
+                    this.classList.add('active');
+
+                    // Identify and display the target section.
+                    const targetSection = document.querySelector(`.resume-section[data-section="${targetSectionData}"]`);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                        // Optional: Scroll to the top of the content area for better UX
+                        document.querySelector('.content-area').scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Initial state setup: Ensure the 'summary' is displayed on load.
+            const initialSection = document.querySelector('.resume-section.active');
+            if (initialSection) {
+                initialSection.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

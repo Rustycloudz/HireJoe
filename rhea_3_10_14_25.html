@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Up Tasks (Integrated Timer & Repeatable Tasks)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-dark': '#1c152c', // Very deep indigo for text/elements
+                        'secondary-light': '#e5e7eb', // Off-white text
+                        'accent-lavender': '#9370DB', // Medium Purple / Lavender for highlights (NEW ACCENT)
+                        'soft-gray': '#374151',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        /* NEW: Fixed Background Image for 'Paused Game Scene' */
+        body {
+            /* USING EXTERNAL URL FOR RELIABILITY */
+            background-image: url('https://cdn.pixabay.com/photo/2022/06/18/14/33/lavender-field-7269899_960_720.jpg'); 
+            background-size: cover;
+            background-attachment: fixed; /* Ensures the image stays put while scrolling */
+            background-position: center;
+            min-height: 100vh;
+            padding: 4rem 0; /* Add padding to center the main menu */
+        }
+
+        /* NEW: Main Menu Frame (Semi-transparent background for the overall menu) */
+        .menu-frame {
+            background-color: rgba(40, 0, 60, 0.68); /* Deep Indigo/Purple, slightly transparent */
+            backdrop-filter: blur(5px); /* Adds a subtle blur to the background image */
+            border: 2px solid #9370DB; /* Lavender border (NEW) */
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Inner Card (Semi-transparent background for the individual sections) */
+        .container-card {
+            background-color: rgba(60, 30, 80, 0.42); /* Darker Purple-Gray with transparency (NEW) */
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(147, 112, 219, 0.5); /* Semi-transparent Lavender inner border (NEW) */
+        }
+        
+        .timer-display {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            letter-spacing: -2px;
+            color: #C3A5DE; /* Lighter lavender for timer */
+            text-shadow: 0 0 10px rgba(147, 112, 219, 0.68);
+        }
+        .item-card {
+            transition: background-color 0.2s;
+            border: 1px solid #374151;
+        }
+        .item-card:hover:not(.opacity-60) {
+            background-color: #374151; /* soft-gray on hover */
+        }
+        /* Custom animation for notifications */
+         @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        .animate-fadeInOut {
+            animation: fadeInOut 3s ease-in-out forwards;
+        }
+        
+        /* Styles for the new day selection buttons */
+        .day-label {
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            background-color: #4b5563; /* slightly lighter gray */
+            color: #d1d5db; /* gray-300 */
+            border: 1px solid transparent;
+            transition: all 0.15s;
+        }
+        .peer:checked + .day-label {
+            background-color: #9370DB; /* accent-lavender (NEW) */
+            color: #1c152c; /* primary-dark (NEW) */
+            font-weight: 700;
+            border-color: #7953c8;
+        }
+
+        /* Custom styles for range input consistency across browsers */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4b5563; /* slightly lighter gray */
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity .15s;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #9370DB; /* accent-lavender (NEW) */
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #9370DB; /* accent-lavender (NEW) */
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        /* Style for the profile name input */
+        #profileNameInput {
+            border-width: 0 0 2px 0; /* Bottom border only */
+        }
+        /* Modal Overlay Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        /* Styles for the Clock Face (Hour Selector) */
+        .clock-face {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background-color: #374151; /* soft-gray */
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .hour-mark {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            font-weight: bold;
+            color: #e5e7eb; /* gray-200 */
+        }
+        .hour-mark:hover {
+            background-color: #4b5563; /* gray-600 */
+        }
+        .hour-mark.selected {
+            background-color: #9370DB; /* accent-lavender (NEW) */
+            color: #1c152c; /* primary-dark (NEW) */
+        }
+    </style>
+    <script>
+        // --- Core State Variables ---
+        let userProgress;
+        let tasks;
+        let editingTaskId = null; // New state to track the task being edited
+        const BASE_XP_PER_TASK = 20; 
+        const XP_PER_DIFFICULTY_POINT = 10; 
+        const XP_PER_POMODORO = 25; 
+        
+        // --- REWARD CONSTANTS (GOLD COIN ECONOMY) ---
+        const COINS_PER_100_XP = 3; 
+        const COINS_PER_LEVEL_UP = 60; 
+
+        const PROGRESS_KEY = 'levelup_tasks_progress_v2';
+        const TASKS_KEY = 'levelup_tasks_list_v4'; // Updated version for new schema
+        const REFRESH_KEY = 'levelup_tasks_refresh_date'; 
+        
+        // --- Day constants ---
+        const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // --- Timer State ---
+        let timerInterval = null;
+        let timerRunning = false;
+        let defaultDurationMinutes = 25; 
+        let timeLeft = defaultDurationMinutes * 60; 
+        let pomodorosCompleted = 0; // Track for XP reward
+
+        // --- NEW TIME SELECTION STATE ---
+        let timeSelectTargetId = null; // ID of the input being used (dueTimeInput or repeatTimeInput)
+        let selectedHour = 0; 
+        let selectedMinute = 0; 
+        let isEditingTask = false; // Flag to indicate if we're in the edit modal context
+
+        // Utility: Generate a unique ID for tasks
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
+        // Utility: Returns today's date string (e.g., "Sun Oct 12 2025")
+        const getTodayDateString = () => new Date().toDateString();
+        // Utility: Returns today's 3-letter day name (e.g., "Mon")
+        const getTodayDayName = () => DAYS[new Date().getDay()];
+
+        // Utility: Load and Save (Simplified localStorage for demo)
+        const loadProgress = () => {
+            try {
+                const storedProgress = localStorage.getItem(PROGRESS_KEY);
+                const storedTasks = localStorage.getItem(TASKS_KEY);
+
+                userProgress = storedProgress ? JSON.parse(storedProgress) : {
+                    level: 1, xp: 0, xpToNextLevel: 100, gold: 0, totalTasksCompleted: 0,
+                    profileName: "The Scholar", avatarUrl: "https://placehold.co/80x80/9370DB/1c152c?text=AV", // Updated avatar color
+                    // NEW STATE FOR ENERGY DRINK MULTIPLIER
+                    xpMultiplierActive: false,
+                    xpMultiplierUses: 0
+                };
+                
+                tasks = storedTasks ? JSON.parse(storedTasks) : [];
+                
+                tasks.forEach(task => {
+                    if (task.lastCompletedDate && !task.lastCompletedTimestamp) {
+                        const completedDate = new Date(task.lastCompletedDate);
+                        task.lastCompletedTimestamp = completedDate.setHours(0, 0, 0, 0); 
+                    }
+                    if (typeof task.lastCompletedTimestamp !== 'number') {
+                        task.lastCompletedTimestamp = 0; // Never completed
+                    }
+                    if (task.repeatDays && task.repeatDays.length > 0 && !task.repeatTime) {
+                        task.repeatTime = '00:00';
+                    }
+                    // Ensure new fields exist on load for older tasks
+                    if (task.dueDate === undefined) task.dueDate = null;
+                    if (task.dueTime === undefined) task.dueTime = null; // NEW FIELD
+                    if (task.penalty === undefined) task.penalty = 20; 
+
+                    delete task.lastCompletedDate; 
+                });
+                
+                if (!userProgress.profileName) userProgress.profileName = "The Scholar";
+                if (!userProgress.avatarUrl) userProgress.avatarUrl = "https://placehold.co/80x80/9370DB/1c152c?text=AV"; // Updated placeholder
+                
+                // Ensure new multiplier fields are loaded/initialized
+                if (userProgress.xpMultiplierActive === undefined) userProgress.xpMultiplierActive = false;
+                if (userProgress.xpMultiplierUses === undefined) userProgress.xpMultiplierUses = 0;
+                if (userProgress.xpMultiplierUses <= 0) userProgress.xpMultiplierActive = false;
+
+                const lastRefresh = localStorage.getItem(REFRESH_KEY);
+                const today = getTodayDateString();
+                
+                if (lastRefresh !== today) {
+                    localStorage.setItem(REFRESH_KEY, today);
+                }
+
+            } catch (error) {
+                console.error("Error loading data:", error);
+                // Reset to safe defaults on load error
+            }
+        };
+
+        const saveProgress = () => {
+            try {
+                localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
+                localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+            } catch (error) {
+                console.error("Error saving data:", error);
+            }
+        };
+
+        const checkLevelUp = (xpEarned) => {
+            userProgress.xp += xpEarned;
+            while (userProgress.xp >= userProgress.xpToNextLevel) {
+                userProgress.xp -= userProgress.xpToNextLevel;
+                userProgress.level += 1;
+                userProgress.gold += COINS_PER_LEVEL_UP;
+                userProgress.xpToNextLevel = Math.floor(userProgress.xpToNextLevel * 1.25);
+                showLevelUpNotification();
+            }
+            const goldEarned = Math.floor(xpEarned / 100 * COINS_PER_100_XP);
+            userProgress.gold += goldEarned;
+        };
+        
+        const showLevelUpNotification = () => {
+             const popup = document.getElementById('notification-popup');
+             document.getElementById('notification-message').textContent = 
+                `Level Up! You reached Level ${userProgress.level} and earned ${COINS_PER_LEVEL_UP} Gold!`;
+             popup.classList.remove('hidden', 'bg-red-600');
+             popup.classList.add('bg-green-600', 'animate-fadeInOut');
+             setTimeout(() => {
+                 popup.classList.add('hidden');
+                 popup.classList.remove('animate-fadeInOut');
+             }, 5000);
+        };
+
+        // --- Task Management Functions ---
+
+        const addTask = () => {
+            const taskInput = document.getElementById('taskInput');
+            const difficultyRange = document.getElementById('difficultyRange');
+            
+            const description = taskInput.value.trim();
+            const difficulty = parseInt(difficultyRange.value);
+
+            // --- Due Date and Time/Penalty ---
+            const dueDateInput = document.getElementById('dueDateInput');
+            const dueTimeInput = document.getElementById('dueTimeInput'); 
+            const penaltyRange = document.getElementById('penaltyRange');
+            
+            const dueDate = dueDateInput.value || null; // YYYY-MM-DD string or null
+            // Only save time if a date is present, default to 23:59 if date is present
+            const dueTime = dueDate ? (dueTimeInput.value || '23:59') : null; 
+            const penalty = parseInt(penaltyRange.value);
+
+            if (description === "") {
+                showNotification("Please write a description for your task.", true);
+                return;
+            }
+            
+            const repeatDays = Array.from(document.querySelectorAll('#repeatDaysContainer input[type="checkbox"]:checked'))
+                                  .map(cb => cb.value);
+
+            const repeatTimeInput = document.getElementById('repeatTimeInput');
+            const repeatTime = repeatDays.length > 0 ? repeatTimeInput.value : null;
+
+            const newTask = {
+                id: generateId(),
+                description: description,
+                difficulty: difficulty,
+                repeatDays: repeatDays, 
+                repeatTime: repeatTime, 
+                lastCompletedTimestamp: 0,
+                dueDate: dueDate, 
+                dueTime: dueTime, // NEW
+                penalty: penalty 
+            };
+
+            tasks.push(newTask);
+            taskInput.value = ''; 
+            
+            document.querySelectorAll('#repeatDaysContainer input[type="checkbox"]').forEach(cb => cb.checked = false);
+            difficultyRange.value = 5;
+            document.getElementById('difficultyValue').textContent = 5;
+            repeatTimeInput.value = '00:00';
+            document.getElementById('newTaskTimeDisplay').textContent = '00:00'; // Reset display
+            
+            // --- Reset Due Date, Time, and Penalty Inputs ---
+            dueDateInput.value = '';
+            dueTimeInput.value = '23:59';
+            document.getElementById('newDueTimeDisplay').textContent = '23:59';
+            penaltyRange.value = 20;
+            document.getElementById('penaltyValue').textContent = 20;
+
+            saveProgress();
+            updateTaskList();
+            showNotification(`Task "${description}" added!`);
+        };
+
+        window.addTask = addTask; 
+        
+        const isTaskDueToday = (task) => {
+            const todayDay = getTodayDayName();
+            const taskRepeatTime = task.repeatTime || '00:00'; 
+            
+            if (task.repeatDays && task.repeatDays.length > 0) {
+                const isRepeatDay = task.repeatDays.includes(todayDay);
+                if (!isRepeatDay) return false;
+                
+                const nowTimestamp = Date.now();
+                
+                let lastResetBoundary = new Date();
+                const [h, m] = taskRepeatTime.split(':').map(Number);
+                lastResetBoundary.setHours(h, m, 0, 0);
+                
+                // If now is before today's reset time, the last reset occurred yesterday
+                if (nowTimestamp < lastResetBoundary.getTime()) {
+                    lastResetBoundary.setDate(lastResetBoundary.getDate() - 1);
+                }
+                
+                const lastCompletedTimestamp = task.lastCompletedTimestamp || 0; 
+                return lastCompletedTimestamp < lastResetBoundary.getTime();
+
+            } else {
+                return true;
+            }
+        };
+        
+        const checkAndApplyDeadlines = () => {
+            const nowTimestamp = Date.now();
+            let totalGoldPenalty = 0;
+            let penaltiesApplied = 0;
+            
+            let tasksToKeep = [];
+
+            for (const task of tasks) {
+                // 1. Check for recurring task overdue status (reset logic)
+                if (task.repeatDays && task.repeatDays.length > 0) {
+                     tasksToKeep.push(task);
+                     continue;
+                }
+
+                // 2. Check for NON-RECURRING task deadline (due date + time logic)
+                if (task.dueDate && task.dueTime) { 
+                    
+                    // Combine date (YYYY-MM-DD) and time (HH:MM) into a single timestamp string
+                    const deadlineString = `${task.dueDate}T${task.dueTime}:00`;
+                    const deadlineTimestamp = new Date(deadlineString).getTime();
+
+                    // Check if the deadline has passed (current time is AFTER deadline time)
+                    if (nowTimestamp > deadlineTimestamp) {
+                        // Task is overdue. Apply penalty and remove.
+                        if (task.penalty > 0) {
+                            totalGoldPenalty += task.penalty;
+                            penaltiesApplied++;
+                            showNotification(`DEADLINE MISSED: Lost ${task.penalty} Gold for "${task.description}".`, true);
+                        } else {
+                            // If penalty is 0, just remove it as it's past due and incomplete
+                            showNotification(`Task "${task.description}" removed (Deadline passed).`, true);
+                        }
+                        continue; // Skip pushing to tasksToKeep
+                    }
+                }
+                tasksToKeep.push(task);
+            }
+            
+            tasks = tasksToKeep; // Update tasks list, removing penalized/removed ones.
+            
+            if (totalGoldPenalty > 0) {
+                userProgress.gold = Math.max(0, userProgress.gold - totalGoldPenalty);
+            }
+
+            if (penaltiesApplied > 0) {
+                saveProgress();
+            }
+        };
+
+        const completeTask = (taskId) => {
+            const index = tasks.findIndex(task => task.id === taskId);
+
+            if (index !== -1) {
+                const task = tasks[index];
+                let xpReward = BASE_XP_PER_TASK + (task.difficulty * XP_PER_DIFFICULTY_POINT);
+                let goldBonus = 0; // Initialize bonus
+
+                let finalXPReward = xpReward;
+                let notificationMessage = `Task Completed! +${xpReward} XP earned.`;
+                
+                // --- Apply Energy Drink Multiplier (NEW LOGIC) ---
+                if (userProgress.xpMultiplierActive) {
+                    finalXPReward *= 2;
+                    userProgress.xpMultiplierUses--;
+                    notificationMessage = `Task Completed! +${xpReward} XP * 2 = +${finalXPReward} XP earned.`;
+                    
+                    if (userProgress.xpMultiplierUses <= 0) {
+                        userProgress.xpMultiplierActive = false;
+                        showNotification("Inspired Focus (2X XP) has worn off!", false);
+                    }
+                    notificationMessage += " (2X XP Bonus applied!)";
+                }
+
+                // --- Calculate Early Completion Bonus ---
+                if (!task.repeatDays || task.repeatDays.length === 0) {
+                    if (task.dueDate && task.dueTime) {
+                        const nowTimestamp = Date.now();
+                        // Combine date (YYYY-MM-DD) and time (HH:MM) into a single timestamp string
+                        const deadlineString = `${task.dueDate}T${task.dueTime}:00`;
+                        const deadlineTimestamp = new Date(deadlineString).getTime();
+
+                        const timeAheadMs = deadlineTimestamp - nowTimestamp;
+
+                        if (timeAheadMs > 0) {
+                            // Calculate full hours ahead and assign as Gold bonus (1 Gold per hour)
+                            const hoursAhead = Math.floor(timeAheadMs / (1000 * 60 * 60));
+                            goldBonus = hoursAhead;
+                            userProgress.gold += goldBonus;
+                        }
+                    }
+                }
+                // --- End Bonus Calculation ---
+
+                userProgress.totalTasksCompleted += 1;
+                checkLevelUp(finalXPReward); // Use the potentially doubled XP
+
+                if (task.repeatDays && task.repeatDays.length > 0) {
+                    tasks[index].lastCompletedTimestamp = Date.now();
+                } else {
+                    tasks.splice(index, 1);
+                }
+
+                saveProgress();
+                updateUI();
+                
+                if (goldBonus > 0) {
+                    notificationMessage += ` (Early Bonus: +${goldBonus} Gold!)`;
+                }
+
+                showNotification(notificationMessage);
+            }
+        };
+        
+        window.completeTask = completeTask; 
+
+        // --- NEW: Shop Item Functions ---
+
+        window.buySmokeBreak = function() {
+            const cost = 50;
+            const newDuration = 30; // UPDATED to 30 minutes
+            if (userProgress.gold >= cost) {
+                userProgress.gold -= cost;
+                defaultDurationMinutes = newDuration; 
+                resetTimer();
+                updateUI();
+                showNotification(`Purchased: Self-Care! Focus session reset to ${newDuration} minutes.`, false);
+            } else {
+                showNotification("Insufficient Gold: You need 50 Gold for this item.", true);
+            }
+        };
+
+        window.buyHourOfGaming = function() {
+            const cost = 60;
+            if (userProgress.gold >= cost) {
+                userProgress.gold -= cost;
+                updateUI();
+                showNotification("Purchased: Hour of Gaming! Go enjoy your hard-earned rest.", false);
+            } else {
+                showNotification("Insufficient Gold: You need 60 Gold for this item.", true);
+            }
+        };
+
+        window.buyPop = function() { 
+            const cost = 100;
+            const xpBoost = 50;
+            if (userProgress.gold >= cost) {
+                userProgress.gold -= cost;
+                checkLevelUp(xpBoost); 
+                updateUI();
+                showNotification(`Purchased: Pop! Gained an instant +${xpBoost} XP rush!`, false);
+            } else {
+                showNotification(`Insufficient Gold: You need ${cost} Gold for this item.`, true);
+            }
+        };
+        
+        window.buyEnergyDrink = function() {
+            const cost = 200;
+            const uses = 5;
+            if (userProgress.gold >= cost) {
+                userProgress.gold -= cost;
+                // Activate the multiplier effect
+                userProgress.xpMultiplierActive = true;
+                userProgress.xpMultiplierUses += uses; // Stackable if purchased multiple times
+                updateUI();
+                showNotification(`Purchased: Energy Drink! Next ${userProgress.xpMultiplierUses} tasks yield DOUBLE XP!`, false);
+            } else {
+                showNotification(`Insufficient Gold: You need ${cost} Gold for this item.`, true);
+            }
+        };
+
+        // --- Task Editing and Deleting Logic (Unchanged) ---
+
+        const openEditModal = (taskId) => {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            editingTaskId = taskId;
+            isEditingTask = true;
+            const modal = document.getElementById('taskEditModal');
+            
+            document.getElementById('editTaskDescription').value = task.description;
+            document.getElementById('editDifficultyRange').value = task.difficulty;
+            document.getElementById('editDifficultyValue').textContent = task.difficulty;
+            
+            // --- Due Date and Time/Penalty ---
+            document.getElementById('editDueDateInput').value = task.dueDate || ''; 
+
+            const timeToDisplay = task.dueTime || '23:59';
+            document.getElementById('editDueTimeInput').value = timeToDisplay; // Set hidden input
+            document.getElementById('editDueTimeDisplay').textContent = timeToDisplay; // Set display span
+
+            document.getElementById('editPenaltyRange').value = task.penalty || 20;
+            document.getElementById('editPenaltyValue').textContent = task.penalty || 20;
+
+            // Set the time selection button display for REPEAT TIME
+            const repeatTimeString = task.repeatTime || '00:00';
+            document.getElementById('editTimeDisplay').textContent = repeatTimeString;
+            document.getElementById('editRepeatTimeInput').value = repeatTimeString;
+
+            const dayCheckboxes = document.querySelectorAll('#editRepeatDaysContainer input[type="checkbox"]');
+            dayCheckboxes.forEach(cb => {
+                cb.checked = task.repeatDays && task.repeatDays.includes(cb.value);
+            });
+
+            modal.classList.remove('hidden');
+        };
+        window.openEditModal = openEditModal;
+
+        const closeEditModal = () => {
+            document.getElementById('taskEditModal').classList.add('hidden');
+            editingTaskId = null;
+            isEditingTask = false;
+        };
+        window.closeEditModal = closeEditModal;
+
+        const saveEditedTask = () => {
+            const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+            if (taskIndex === -1) return;
+
+            const description = document.getElementById('editTaskDescription').value.trim();
+            const difficulty = parseInt(document.getElementById('editDifficultyRange').value);
+            
+            // --- Due Date and Time/Penalty ---
+            const dueDate = document.getElementById('editDueDateInput').value || null;
+            // Only save time if a date is present, default to 23:59 if date is present
+            const dueTime = dueDate ? (document.getElementById('editDueTimeInput').value || '23:59') : null; 
+            const penalty = parseInt(document.getElementById('editPenaltyRange').value);
+
+            // Get value from the hidden input for REPEAT TIME
+            const repeatTime = document.getElementById('editRepeatTimeInput').value; 
+            
+            const repeatDays = Array.from(document.querySelectorAll('#editRepeatDaysContainer input[type="checkbox"]:checked'))
+                                  .map(cb => cb.value);
+
+            if (description === "") {
+                showNotification("Task description cannot be empty.", true);
+                return;
+            }
+            
+            tasks[taskIndex].description = description;
+            tasks[taskIndex].difficulty = difficulty;
+            tasks[taskIndex].repeatDays = repeatDays;
+            tasks[taskIndex].repeatTime = repeatDays.length > 0 ? repeatTime : null;
+            
+            // --- Save Due Date, Time, and Penalty ---
+            tasks[taskIndex].dueDate = dueDate;
+            tasks[taskIndex].dueTime = dueTime;
+            tasks[taskIndex].penalty = penalty;
+
+            saveProgress();
+            updateUI();
+            closeEditModal();
+            showNotification(`Task "${description}" updated successfully.`);
+        };
+        window.saveEditedTask = saveEditedTask;
+
+        const deleteTask = () => {
+            const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+            if (taskIndex !== -1) {
+                const taskDescription = tasks[taskIndex].description;
+                tasks.splice(taskIndex, 1);
+                saveProgress();
+                updateUI();
+                closeEditModal();
+                showNotification(`Task "${taskDescription}" deleted.`);
+            }
+        }
+        window.deleteTask = deleteTask;
+
+        // --- Timer Functions (Unchanged) ---
+        const setTimerDuration = (minutes) => {
+            const min = parseInt(minutes, 10);
+            if (isNaN(min) || min < 1) { defaultDurationMinutes = 1; } 
+            else if (min > 180) { defaultDurationMinutes = 180; } 
+            else { defaultDurationMinutes = min; }
+            if (!timerRunning) { resetTimer(); }
+            document.getElementById('durationInput').value = defaultDurationMinutes;
+            updateUI();
+        };
+        window.setTimerDuration = setTimerDuration; 
+
+        const updateTimerDisplay = () => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        };
+
+        const timerTick = () => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerRunning = false;
+                pomodorosCompleted++;
+                checkLevelUp(XP_PER_POMODORO);
+                saveProgress();
+                updateUI();
+                timeLeft = defaultDurationMinutes * 60;
+                updateTimerDisplay();
+                document.getElementById('startStopButton').textContent = `Start Focus (${defaultDurationMinutes}m)`;
+                document.getElementById('startStopButton').classList.replace('bg-red-500', 'bg-green-500');
+                showNotification(`Focus Session Complete! +${XP_PER_POMODORO} XP earned.`);
+            }
+        };
+
+        const startStopTimer = () => {
+            const button = document.getElementById('startStopButton');
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerRunning = false;
+                button.textContent = 'Resume Focus';
+                button.classList.replace('bg-red-500', 'bg-yellow-500');
+            } else {
+                timerRunning = true;
+                timerInterval = setInterval(timerTick, 1000); 
+                button.textContent = 'Stop Focus';
+                button.classList.replace('bg-yellow-500', 'bg-red-500');
+                button.classList.replace('bg-green-500', 'bg-red-500');
+            }
+        };
+
+        window.startStopTimer = startStopTimer; 
+        
+        const resetTimer = () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerRunning = false;
+            }
+            timeLeft = defaultDurationMinutes * 60;
+            updateTimerDisplay();
+            document.getElementById('startStopButton').textContent = `Start Focus (${defaultDurationMinutes}m)`;
+            document.getElementById('startStopButton').classList.replace('bg-red-500', 'bg-green-500');
+            document.getElementById('startStopButton').classList.replace('bg-yellow-500', 'bg-green-500');
+        }
+        window.resetTimer = resetTimer; 
+
+        // --- Time Selection Modal Functions (Unchanged) ---
+
+        const openTimeSelectModal = (targetInputId) => {
+            timeSelectTargetId = targetInputId; // This is the ID of the hidden <input type="time"> field
+            
+            let timeDisplayId;
+            if (targetInputId === 'repeatTimeInput') timeDisplayId = 'newTaskTimeDisplay';
+            else if (targetInputId === 'editRepeatTimeInput') timeDisplayId = 'editTimeDisplay';
+            else if (targetInputId === 'dueTimeInput') timeDisplayId = 'newDueTimeDisplay'; // NEW
+            else if (targetInputId === 'editDueTimeInput') timeDisplayId = 'editDueTimeDisplay'; // NEW
+            else timeDisplayId = ''; 
+
+            // Get the current time string from the relevant display span to initialize selection
+            const initialTimeString = document.getElementById(timeDisplayId).textContent;
+            
+            // Parse initial time
+            const [h, m] = initialTimeString.split(':').map(Number);
+            selectedHour = h;
+            selectedMinute = m;
+
+            // Initialize the modal UI
+            document.getElementById('hourSelectionView').classList.remove('hidden');
+            document.getElementById('minuteSelectionView').classList.add('hidden');
+            document.getElementById('timeDisplayPreview').textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            generateHourMarks();
+
+            document.getElementById('timeSelectModal').classList.remove('hidden');
+        };
+        window.openTimeSelectModal = openTimeSelectModal;
+
+        const closeTimeSelectModal = () => {
+            document.getElementById('timeSelectModal').classList.add('hidden');
+            timeSelectTargetId = null;
+        };
+        window.closeTimeSelectModal = closeTimeSelectModal;
+        
+        const selectHour = (hour) => {
+            selectedHour = hour;
+            document.getElementById('timeDisplayPreview').textContent = `${hour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+            
+            // Move to minute selection view
+            document.getElementById('hourSelectionView').classList.add('hidden');
+            document.getElementById('minuteSelectionView').classList.remove('hidden');
+        };
+        window.selectHour = selectHour;
+        
+        const selectMinute = (minute) => {
+            selectedMinute = minute;
+            const finalTimeString = `${selectedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+            
+            // 1. Update the hidden input field (the actual target)
+            document.getElementById(timeSelectTargetId).value = finalTimeString;
+            
+            // 2. Update the visible display span/button text
+            let timeDisplayId;
+            if (timeSelectTargetId === 'repeatTimeInput') timeDisplayId = 'newTaskTimeDisplay';
+            else if (timeSelectTargetId === 'editRepeatTimeInput') timeDisplayId = 'editTimeDisplay';
+            else if (timeSelectTargetId === 'dueTimeInput') timeDisplayId = 'newDueTimeDisplay'; // NEW
+            else if (timeSelectTargetId === 'editDueTimeInput') timeDisplayId = 'editDueTimeDisplay'; // NEW
+            else timeDisplayId = '';
+            
+            document.getElementById(timeDisplayId).textContent = finalTimeString;
+            
+            // 3. Close modal
+            closeTimeSelectModal();
+        };
+        window.selectMinute = selectMinute;
+
+        const generateHourMarks = () => {
+            const clockFace = document.getElementById('clockFace');
+            clockFace.innerHTML = ''; // Clear previous marks
+
+            const radius = 120; // Radius of the clock face
+            const center = 150; // Center position (half of clock-face size)
+            
+            for (let i = 0; i < 24; i++) {
+                // Calculate position for 24 marks
+                const angle = (i * 360 / 24) - 90; // Start at 12 o'clock, move clockwise
+                const rad = angle * Math.PI / 180;
+                
+                const x = center + radius * Math.cos(rad) - 20; // -20 to center the 40px mark
+                const y = center + radius * Math.sin(rad) - 20; // -20 to center the 40px mark
+
+                const mark = document.createElement('div');
+                mark.className = `hour-mark ${i === selectedHour ? 'selected' : 'bg-gray-600 hover:bg-gray-500'}`;
+                mark.style.left = `${x}px`;
+                mark.style.top = `${y}px`;
+                mark.textContent = i.toString().padStart(2, '0');
+                mark.onclick = () => selectHour(i);
+                
+                clockFace.appendChild(mark);
+            }
+        };
+
+        // --- UI Update Functions (Unchanged) ---
+        const updateProgressDisplay = () => {
+            // Placeholder function for image upload handling
+            window.handleImageUpload = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        userProgress.avatarUrl = e.target.result;
+                        document.getElementById('avatarImage').src = e.target.result;
+                        saveProgress();
+                        showNotification("Avatar updated!");
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            window.saveProfileName = function() {
+                const nameInput = document.getElementById('profileNameInput');
+                userProgress.profileName = nameInput.value.trim() || "The Scholar";
+                saveProgress();
+            };
+
+            document.getElementById('avatarImage').src = userProgress.avatarUrl;
+            document.getElementById('profileNameInput').value = userProgress.profileName;
+            document.getElementById('levelDisplay').textContent = userProgress.level;
+            document.getElementById('xpDisplay').textContent = `${userProgress.xp} / ${userProgress.xpToNextLevel} XP`;
+            document.getElementById('goldDisplay').textContent = userProgress.gold;
+            const xpPercentage = (userProgress.xp / userProgress.xpToNextLevel) * 100;
+            document.getElementById('xpBar').style.width = `${xpPercentage}%`;
+
+            // --- Multiplier Status Display (NEW) ---
+            const multiplierStatus = document.getElementById('multiplierStatus');
+            if (userProgress.xpMultiplierActive) {
+                multiplierStatus.textContent = `2X XP Active: ${userProgress.xpMultiplierUses} Uses Left!`;
+                multiplierStatus.classList.remove('hidden');
+                multiplierStatus.classList.add('bg-purple-800', 'text-yellow-300');
+                multiplierStatus.classList.remove('bg-gray-800');
+            } else {
+                multiplierStatus.classList.add('hidden');
+            }
+        };
+        
+        // --- Shop Buy Functions (Updated) ---
+        // Smoke Break and Hour of Gaming remain as before
+        // Pop and Energy Drink have been implemented above (buyPop and buyEnergyDrink)
+
+        const updateTaskList = () => {
+            const taskList = document.getElementById('taskList');
+            if (!taskList) return; 
+            taskList.innerHTML = ''; 
+            
+            const nowTimestamp = Date.now();
+
+            // Filter for tasks due today (based on repeat logic) OR non-repeating tasks that have not been penalized/removed
+            const tasksDueToday = tasks.filter(task => {
+                if (task.repeatDays && task.repeatDays.length > 0) {
+                    return isTaskDueToday(task);
+                }
+                // If it's a one-time task, it's always "due today" unless completed or penalized (which happens on load)
+                return true; 
+            });
+
+            if (tasksDueToday.length === 0 && tasks.length > 0) {
+                 taskList.innerHTML = `<p class="text-gray-500 p-4 text-center">You have completed all tasks due today! Your remaining recurring quests will reset at their designated time.</p>`;
+                 return;
+            }
+            
+            if (tasks.length === 0) {
+                 taskList.innerHTML = `<p class="text-gray-500 p-4 text-center">All clear! Add a new task to begin your quest.</p>`;
+                 return;
+            }
+
+            tasksDueToday.forEach(task => {
+                const difficultyColor = task.difficulty > 8 ? 'bg-red-800' : task.difficulty > 5 ? 'bg-orange-600' : 'bg-green-600';
+                const difficultyText = task.difficulty;
+                
+                let repeatInfo = '';
+                let deadlineInfo = '';
+                let taskCardClass = 'bg-soft-gray border-gray-700'; // Default background
+
+                
+                // --- DEADLINE DISPLAY LOGIC ---
+                if (task.dueDate && task.dueTime && (!task.repeatDays || task.repeatDays.length === 0)) {
+                    
+                    const deadlineString = `${task.dueDate}T${task.dueTime}:00`;
+                    const deadlineTimestamp = new Date(deadlineString).getTime();
+
+                    const msRemaining = deadlineTimestamp - nowTimestamp;
+                    const hoursRemaining = msRemaining / (1000 * 60 * 60);
+
+                    // Format date and time for display
+                    const formattedDate = new Date(task.dueDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const timeDisplay = task.dueTime; // HH:MM format
+                    const fullDeadline = `${formattedDate} @ ${timeDisplay}`;
+                    
+                    let urgencyClass = 'text-gray-400';
+                    let cardBgClass = 'bg-soft-gray border-gray-700';
+
+                    if (msRemaining <= 0) {
+                        // Should not happen post-load, but good for real-time edge cases
+                        deadlineInfo = `<span class="text-xs font-bold text-red-500 ml-3">(OVERDUE! Penalty: ${task.penalty} G)</span>`;
+                        cardBgClass = 'bg-red-900/60 border-red-600 opacity-60'; 
+                    } else if (hoursRemaining < 24) {
+                        urgencyClass = 'text-red-400';
+                        cardBgClass = 'bg-red-900/40 border-red-700';
+                        deadlineInfo = `<span class="text-xs font-bold ${urgencyClass} ml-3">(DUE IN < ${Math.ceil(hoursRemaining)} HRS! Penalty: ${task.penalty} G)</span>`;
+                    } else if (hoursRemaining < 48) {
+                        urgencyClass = 'text-orange-400';
+                        cardBgClass = 'bg-orange-900/40 border-orange-700';
+                        deadlineInfo = `<span class="text-xs font-bold ${urgencyClass} ml-3">(Due Tomorrow! Penalty: ${task.penalty} G)</span>`;
+                    } else {
+                        // Normal display
+                        deadlineInfo = `<span class="text-xs font-bold ${urgencyClass} ml-3">(Due: ${fullDeadline}. Penalty: ${task.penalty} G)</span>`;
+                    }
+                    taskCardClass = cardBgClass;
+                }
+                // --- END DEADLINE DISPLAY LOGIC ---
+
+                if (task.repeatDays && task.repeatDays.length > 0) {
+                    const timeString = task.repeatTime || '00:00';
+                    const timeInfo = `<span class="ml-1">${timeString}</span>`;
+                    
+                    repeatInfo = `
+                        <span class="text-xs text-accent-lavender font-medium ml-2 flex items-center">
+                            (R: ${task.repeatDays.join(', ')} @ 
+                            ${timeInfo})
+                        </span>`;
+                }
+
+                const taskHtml = `
+                    <div class="flex justify-between items-center p-3 mb-2 rounded-xl border ${taskCardClass}">
+                        <div class="flex items-center space-x-3 w-4/5">
+                            <span class="p-1 rounded-full text-xs font-bold ${difficultyColor}">${difficultyText}</span>
+                            <p class="text-white text-base truncate flex items-center">
+                                <span>${task.description}</span> ${repeatInfo} ${deadlineInfo}
+                                <button onclick="openEditModal('${task.id}')" 
+                                    class="ml-3 text-gray-400 hover:text-accent-lavender transition duration-150">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-4.636 4.636l2.828 2.828L7.172 17.828H4v-3.172l5.828-5.828z" />
+                                    </svg>
+                                </button>
+                            </p>
+                        </div>
+                        <button onclick="completeTask('${task.id}')"
+                            class="bg-accent-lavender text-primary-dark text-sm font-bold py-1 px-3 rounded-lg hover:bg-[#7953c8] transition duration-150 whitespace-nowrap">
+                            Done
+                        </button>
+                    </div>
+                `;
+                taskList.innerHTML += taskHtml;
+            });
+        };
+
+        const showNotification = (message, isError = false) => {
+            const popup = document.getElementById('notification-popup');
+            const messageElement = document.getElementById('notification-message');
+            messageElement.textContent = message;
+            popup.classList.remove('hidden', 'bg-green-600', 'bg-red-600', 'animate-fadeInOut');
+            if (isError) {
+                popup.classList.add('bg-red-600');
+            } else {
+                popup.classList.add('bg-green-600');
+            }
+            popup.classList.add('animate-fadeInOut');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                popup.classList.remove('animate-fadeInOut');
+            }, 3000);
+        };
+
+        const updateUI = () => {
+            updateProgressDisplay();
+            updateTaskList();
+            updateTimerDisplay();
+            document.getElementById('durationInput').value = defaultDurationMinutes; 
+            const button = document.getElementById('startStopButton');
+            if (!timerRunning) {
+                button.textContent = `Start Focus (${defaultDurationMinutes}m)`;
+                button.classList.add('bg-green-500');
+            }
+
+            // Ensure the button state reflects the timer status on initial load/UI refresh
+            if (timerRunning) {
+                button.classList.replace('bg-green-500', 'bg-red-500');
+                button.textContent = 'Stop Focus';
+            } else if (timeLeft < defaultDurationMinutes * 60) {
+                 button.classList.replace('bg-green-500', 'bg-yellow-500');
+                 button.textContent = 'Resume Focus';
+            } else {
+                 button.classList.remove('bg-yellow-500', 'bg-red-500');
+                 button.classList.add('bg-green-500');
+            }
+            
+            saveProgress();
+        };
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // --- Check and apply deadlines on load ---
+            checkAndApplyDeadlines(); 
+            
+            const durationInput = document.getElementById('durationInput');
+            if (durationInput) {
+                durationInput.value = defaultDurationMinutes;
+            }
+
+            updateUI();
+            
+            document.getElementById('taskInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+        });
+
+    </script>
+</head>
+<body class="text-secondary-light font-sans">
+
+    <!-- Notification Popup (Fixed at top) -->
+    <div id="notification-popup" class="hidden fixed top-4 right-4 z-50 p-3 rounded-xl shadow-2xl transition duration-300 ease-in-out">
+        <p id="notification-message" class="font-bold"></p>
+    </div>
+    
+    <!-- Outer Menu Frame for the Aesthetic -->
+    <div class="menu-frame max-w-7xl mx-auto my-8 p-4 sm:p-8 rounded-xl min-h-[90vh]">
+        
+        <!-- Header: Title only -->
+        <header class="text-center space-y-3">
+            <h1 class="text-4xl font-extrabold text-accent-lavender">Renaissance Quest</h1>
+            <p class="text-gray-400">Level up your focus and earn Gold!</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8">
+            
+            <!-- COLUMN 1: Adventurer Profile -->
+            <div class="lg:col-span-1 container-card p-6 rounded-2xl space-y-5">
+                <h2 class="text-2xl font-bold border-b pb-3 border-gray-700 text-center">Adventurer Profile</h2>
+                
+                <div class="flex flex-col items-center space-y-4 mb-4">
+                    
+                    <div class="relative group">
+                        <img id="avatarImage" 
+                             src="https://placehold.co/80x80/9370DB/1c152c?text=AV" 
+                             alt="User Avatar" 
+                             class="w-20 h-20 rounded-full border-4 border-accent-lavender object-cover cursor-pointer hover:opacity-75 transition"
+                             onclick="document.getElementById('avatarUploadInput').click()">
+                        
+                        <div onclick="document.getElementById('avatarUploadInput').click()" 
+                             class="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 cursor-pointer">
+                            <span class="text-white text-xs font-bold">Upload</span>
+                        </div>
+                        
+                        <input type="file" id="avatarUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                    </div>
+
+                    <input type="text" id="profileNameInput" placeholder="Enter your quest name" 
+                           onblur="saveProfileName()"
+                           class="text-xl font-semibold text-center text-accent-lavender bg-transparent border-b border-gray-600 focus:outline-none focus:border-accent-lavender p-1 w-full truncate">
+                </div>
+
+                <div class="space-y-3 bg-soft-gray p-3 rounded-xl">
+                    <p class="text-lg font-semibold flex justify-between items-center">
+                        <span>Level:</span> 
+                        <span id="levelDisplay" class="text-accent-lavender">1</span>
+                    </p>
+                    <p class="text-lg font-semibold flex justify-between items-center">
+                        <span>Gold:</span> 
+                        <span id="goldDisplay" class="text-accent-lavender flex items-center">0 <span class="text-xs ml-1">💰</span></span>
+                    </p>
+                </div>
+                
+                <!-- NEW: Multiplier Status Display -->
+                <div id="multiplierStatus" class="mt-3 p-3 rounded-xl text-center font-bold text-sm hidden">
+                    <!-- Status injected by updateProgressDisplay -->
+                </div>
+
+                <div class="w-full bg-soft-gray rounded-full h-3.5 mt-4">
+                    <div id="xpBar" class="bg-purple-500 h-3.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p id="xpDisplay" class="text-sm font-medium text-gray-400 text-center">0 / 100 XP</p>
+            </div>
+
+            <!-- COLUMN 2 & 3: Tasks and Timer (Center Section) -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Task Management -->
+                <div class="container-card p-6 rounded-2xl space-y-6">
+                    <h2 class="text-2xl font-bold border-b pb-3 border-gray-700">Current Tasks</h2>
+
+                    <!-- Add New Task Form -->
+                    <div class="space-y-3">
+                        <div class="flex space-x-2">
+                            <input type="text" id="taskInput" placeholder="Enter your next masterpiece (e.g., Draft first paragraph)" 
+                                class="flex-grow p-3 rounded-xl bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-accent-lavender focus:outline-none">
+                            
+                            <div class="flex flex-col items-center p-2 rounded-xl bg-gray-700 w-1/4 min-w-[100px] sm:min-w-[120px]">
+                                <label for="difficultyRange" class="text-xs font-semibold text-gray-300 mb-1">D<span id="difficultyValue">5</span></label>
+                                <input type="range" id="difficultyRange" min="1" max="10" value="5" 
+                                    oninput="document.getElementById('difficultyValue').textContent = this.value"
+                                    class="w-full">
+                            </div>
+                            
+                            <button id="addTaskButton" onclick="addTask()"
+                                class="bg-accent-lavender text-primary-dark font-bold py-3 px-4 rounded-xl hover:bg-[#7953c8] transition duration-200 whitespace-nowrap">
+                                Add Task
+                            </button>
+                        </div>
+                        
+                        <!-- Due Date, Time, and Penalty Section -->
+                        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                            <!-- Due Date and Time -->
+                            <div class="flex-grow p-3 rounded-xl bg-gray-700">
+                                <label class="text-xs font-semibold text-gray-300 block mb-1">Due Date & Time (Optional):</label>
+                                <div class="flex space-x-2">
+                                    <input type="date" id="dueDateInput" 
+                                           class="flex-grow p-1 rounded-lg bg-gray-600 text-white focus:ring-accent-lavender focus:outline-none border-none">
+                                    
+                                    <!-- Hidden input for the actual time value -->
+                                    <input type="hidden" id="dueTimeInput" value="23:59"> 
+                                    
+                                    <!-- Button to trigger time selection modal -->
+                                    <button type="button" onclick="openTimeSelectModal('dueTimeInput')"
+                                        class="p-1 rounded-lg bg-gray-600 text-white border border-gray-500 hover:bg-gray-500 transition text-sm font-mono whitespace-nowrap">
+                                        <span id="newDueTimeDisplay">23:59</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Penalty Range -->
+                            <div class="flex flex-col items-center p-2 rounded-xl bg-gray-700 w-full sm:w-1/3 min-w-[100px]">
+                                <label for="penaltyRange" class="text-xs font-semibold text-gray-300 mb-1">Penalty <span id="penaltyValue">20</span> Gold</label>
+                                <input type="range" id="penaltyRange" min="0" max="100" step="5" value="20" 
+                                    oninput="document.getElementById('penaltyValue').textContent = this.value"
+                                    class="w-full">
+                            </div>
+                        </div>
+
+                        <!-- Repeat Day Selection UI -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl bg-gray-700">
+                            <label class="text-sm font-semibold text-gray-300 mb-2 sm:mb-0 sm:mr-4">Repeat On:</label>
+                            <div id="repeatDaysContainer" class="flex flex-wrap gap-2 text-xs">
+                                <input type="checkbox" id="repeat-Sun" value="Sun" class="hidden peer">
+                                <label for="repeat-Sun" class="day-label">Sun</label>
+                                <input type="checkbox" id="repeat-Mon" value="Mon" class="hidden peer">
+                                <label for="repeat-Mon" class="day-label">Mon</label>
+                                <input type="checkbox" id="repeat-Tue" value="Tue" class="hidden peer">
+                                <label for="repeat-Tue" class="day-label">Tue</label>
+                                <input type="checkbox" id="repeat-Wed" value="Wed" class="hidden peer">
+                                <label for="repeat-Wed" class="day-label">Wed</label>
+                                <input type="checkbox" id="repeat-Thu" value="Thu" class="hidden peer">
+                                <label for="repeat-Thu" class="day-label">Thu</label>
+                                <input type="checkbox" id="repeat-Fri" value="Fri" class="hidden peer">
+                                <label for="repeat-Fri" class="day-label">Fri</label>
+                                <input type="checkbox" id="repeat-Sat" value="Sat" class="hidden peer">
+                                <label for="repeat-Sat" class="day-label">Sat</label>
+                            </div>
+                        </div>
+
+                        <!-- Repeat Time Selection UI (Replaced with custom button) -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl bg-gray-700">
+                            <label for="repeatTimeInput" class="text-sm font-semibold text-gray-300 mb-2 sm:mb-0 sm:mr-4">Daily Reset Time:</label>
+                            
+                            <!-- Hidden input maintains the data -->
+                            <input type="hidden" id="repeatTimeInput" value="00:00"> 
+
+                            <!-- Visible Button triggers the modal -->
+                            <button type="button" onclick="openTimeSelectModal('repeatTimeInput')"
+                                class="p-2 rounded-lg bg-gray-600 text-white border border-gray-500 hover:bg-gray-500 transition">
+                                <span id="newTaskTimeDisplay">00:00</span>
+                            </button>
+                        </div>
+
+                        <p class="text-sm text-gray-400">Task XP = Base (20) + (Difficulty * 10). If no days are selected, the task is one-time.</p>
+                    </div>
+
+                    <!-- Task List Display -->
+                    <div id="taskList" class="space-y-2">
+                        <!-- Tasks will be injected here by updateTaskList() -->
+                    </div>
+                </div>
+                
+                <!-- Focus Timer Card -->
+                <div class="container-card p-6 rounded-2xl space-y-5">
+                    <h2 class="text-2xl font-bold text-center border-b pb-3 border-gray-700">Focus Timer (Pomodoro)</h2>
+                    
+                    <div class="text-center">
+                        <p id="timerDisplay" class="timer-display text-6xl sm:text-7xl">25:00</p>
+                    </div>
+
+                    <div class="flex items-center justify-center space-x-4">
+                        <label for="durationInput" class="text-gray-400 font-semibold text-sm">Session Length (Mins):</label>
+                        <input type="number" id="durationInput" min="1" max="180" value="25" 
+                               onchange="setTimerDuration(this.value)"
+                               class="w-20 p-2 rounded-lg bg-gray-700 text-white text-center border border-gray-600 focus:ring-accent-lavender focus:border-accent-lavender">
+                    </div>
+
+                    <div class="flex flex-col space-y-3">
+                        <button id="startStopButton" onclick="startStopTimer()"
+                            class="text-xl font-bold py-3 rounded-xl transition duration-200 shadow-lg"></button>
+                        <button onclick="resetTimer()"
+                            class="text-sm font-bold bg-gray-500 text-white py-2 rounded-xl hover:bg-gray-600 transition duration-200">
+                            Reset Timer
+                        </button>
+                        <p class="text-xs text-gray-400 text-center pt-2">Complete a session for +<span class="text-accent-lavender">25 XP</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 4: Shop (Right Section) -->
+            <div class="lg:col-span-1 container-card p-6 rounded-2xl space-y-6">
+                <h2 class="text-2xl font-bold border-b pb-3 border-gray-700 text-center">The Scriptorium (Shop)</h2>
+                
+                <div class="space-y-4"> 
+                    
+                    <!-- Shop Item 1: 30 Minutes of Self-Care (UPDATED) -->
+                    <div class="item-card p-4 rounded-xl flex flex-col justify-between items-start bg-soft-gray hover:ring-2 hover:ring-pink-500">
+                        <div class="mb-2">
+                            <p class="text-lg font-bold">30 Minutes of Self-Care</p>
+                            <p class="text-sm text-gray-400">A longer break for rejuvenation. Resets timer duration to 30m.</p>
+                        </div>
+                        <button onclick="buySmokeBreak()"
+                            class="w-full text-sm font-bold bg-pink-600 text-white py-2 px-3 rounded-lg hover:bg-pink-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+                            50 Gold
+                        </button>
+                    </div>
+
+                    <!-- Shop Item 2: Hour of Gaming -->
+                    <div class="item-card p-4 rounded-xl flex flex-col justify-between items-start bg-soft-gray hover:ring-2 hover:ring-indigo-500">
+                        <div class="mb-2">
+                            <p class="text-lg font-bold">Hour of Gaming</p>
+                            <p class="text-sm text-gray-400">Guilt-free session of digital entertainment.</p>
+                        </div>
+                        <button onclick="buyHourOfGaming()"
+                            class="w-full text-sm font-bold bg-indigo-600 text-white py-2 px-3 rounded-lg hover:bg-indigo-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+                            60 Gold
+                        </button>
+                    </div>
+                    
+                    <!-- Shop Item 3: Pop (Now active) -->
+                    <div class="item-card p-4 rounded-xl flex flex-col justify-between items-start bg-soft-gray hover:ring-2 hover:ring-green-500">
+                        <div class="mb-2">
+                            <p class="text-lg font-bold text-gray-200">Pop</p>
+                            <p class="text-sm text-gray-400">A sugar rush that grants instant **+50 XP**.</p>
+                        </div>
+                        <button onclick="buyPop()"
+                            class="w-full text-sm font-bold bg-green-600 text-white py-2 px-3 rounded-lg hover:bg-green-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+                            100 Gold
+                        </button>
+                    </div>
+
+                    <!-- Shop Item 4: +$2 to Treat Budget (Now active) -->
+                    <div class="item-card p-4 rounded-xl flex flex-col justify-between items-start bg-soft-gray hover:ring-2 hover:ring-yellow-500">
+                        <div class="mb-2">
+                            <p class="text-lg font-bold text-gray-200">+$2 Treat Budget</p>
+                            <p class="text-sm text-gray-400">**2X XP** for the next **5 task completions**.</p>
+                        </div>
+                        <button onclick="buyEnergyDrink()"
+                            class="w-full text-sm font-bold bg-yellow-600 text-primary-dark py-2 px-3 rounded-lg hover:bg-yellow-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+                            200 Gold
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <!-- Task Edit Modal (Hidden by Default) -->
+    <div id="taskEditModal" class="modal-overlay hidden">
+        <div class="menu-frame w-full max-w-lg mx-4 p-6 rounded-2xl space-y-6 shadow-2xl">
+            <h2 class="text-2xl font-bold text-accent-lavender border-b pb-3 border-gray-700">Edit Task</h2>
+
+            <div>
+                <label for="editTaskDescription" class="block text-sm font-medium text-gray-300 mb-1">Description:</label>
+                <input type="text" id="editTaskDescription" placeholder="Task description" 
+                    class="w-full p-3 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-accent-lavender focus:outline-none">
+            </div>
+
+            <div class="p-3 rounded-xl bg-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <label for="editDifficultyRange" class="text-sm font-semibold text-gray-300">Difficulty (XP Weight):</label>
+                    <span id="editDifficultyValue" class="text-accent-lavender font-bold text-lg">5</span>
+                </div>
+                <input type="range" id="editDifficultyRange" min="1" max="10" value="5" 
+                    oninput="document.getElementById('editDifficultyValue').textContent = this.value"
+                    class="w-full">
+            </div>
+
+            <!-- Edit Due Date, Time, and Penalty Section -->
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                <!-- Edit Due Date and Time -->
+                <div class="flex-grow p-3 rounded-xl bg-gray-700">
+                    <label class="text-xs font-semibold text-gray-300 block mb-1">Due Date & Time (Optional):</label>
+                    <div class="flex space-x-2">
+                        <input type="date" id="editDueDateInput" 
+                               class="flex-grow p-1 rounded-lg bg-gray-600 text-white focus:ring-accent-lavender focus:outline-none border-none">
+                        
+                        <!-- Hidden input for the actual time value -->
+                        <input type="hidden" id="editDueTimeInput" value="23:59"> 
+
+                        <!-- Button to trigger time selection modal -->
+                        <button type="button" onclick="openTimeSelectModal('editDueTimeInput')"
+                            class="p-1 rounded-lg bg-gray-600 text-white border border-gray-500 hover:bg-gray-500 transition text-sm font-mono whitespace-nowrap">
+                            <span id="editDueTimeDisplay">23:59</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Edit Penalty Range -->
+                <div class="flex flex-col items-center p-2 rounded-xl bg-gray-700 w-full sm:w-1/3 min-w-[100px]">
+                    <label for="editPenaltyRange" class="text-xs font-semibold text-gray-300 mb-1">Penalty <span id="editPenaltyValue">20</span> Gold</label>
+                    <input type="range" id="editPenaltyRange" min="0" max="100" step="5" value="20" 
+                        oninput="document.getElementById('editPenaltyValue').textContent = this.value"
+                        class="w-full">
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl bg-gray-700">
+                <label class="text-sm font-semibold text-gray-300 mb-2 sm:mb-0 sm:mr-4">Repeat On:</label>
+                <div id="editRepeatDaysContainer" class="flex flex-wrap gap-2 text-xs">
+                    <input type="checkbox" id="edit-Sun" value="Sun" class="hidden peer">
+                    <label for="edit-Sun" class="day-label">Sun</label>
+                    <input type="checkbox" id="edit-Mon" value="Mon" class="hidden peer">
+                    <label for="edit-Mon" class="day-label">Mon</label>
+                    <input type="checkbox" id="edit-Tue" value="Tue" class="hidden peer">
+                    <label for="edit-Tue" class="day-label">Tue</label>
+                    <input type="checkbox" id="edit-Wed" value="Wed" class="hidden peer">
+                    <label for="edit-Wed" class="day-label">Wed</label>
+                    <input type="checkbox" id="edit-Thu" value="Thu" class="hidden peer">
+                    <label for="edit-Thu" class="day-label">Thu</label>
+                    <input type="checkbox" id="edit-Fri" value="Fri" class="hidden peer">
+                    <label for="edit-Fri" class="day-label">Fri</label>
+                    <input type="checkbox" id="edit-Sat" value="Sat" class="hidden peer">
+                    <label for="edit-Sat" class="day-label">Sat</label>
+                </div>
+            </div>
+
+            <!-- Edit Repeat Time Selection UI -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl bg-gray-700">
+                <label for="editRepeatTimeInput" class="text-sm font-semibold text-gray-300 mb-2 sm:mb-0 sm:mr-4">Daily Reset Time:</label>
+                
+                <input type="hidden" id="editRepeatTimeInput" value="00:00"> 
+
+                <button type="button" onclick="openTimeSelectModal('editRepeatTimeInput')"
+                    class="p-2 rounded-lg bg-gray-600 text-white border border-gray-500 hover:bg-gray-500 transition">
+                    <span id="editTimeDisplay">00:00</span>
+                </button>
+            </div>
+
+            <div class="flex justify-between space-x-3 mt-6">
+                <button onclick="deleteTask()"
+                    class="bg-red-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-700 transition duration-200 w-1/3">
+                    Delete
+                </button>
+                <button onclick="closeEditModal()"
+                    class="bg-gray-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-600 transition duration-200 w-1/3">
+                    Cancel
+                </button>
+                <button onclick="saveEditedTask()"
+                    class="bg-green-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-700 transition duration-200 w-1/3">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Selection Modal (Larger Window + Two-Step Clock) -->
+    <div id="timeSelectModal" class="modal-overlay hidden">
+        <div class="menu-frame w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl mx-4 p-8 rounded-2xl space-y-6 shadow-2xl"
+             onclick="event.stopPropagation()">
+            
+            <h2 class="text-2xl font-bold text-accent-lavender border-b pb-3 border-gray-700 flex justify-between items-center">
+                Select Time
+                <span id="timeDisplayPreview" class="text-3xl text-white font-mono">00:00</span>
+            </h2>
+
+            <!-- Step 1: Hour Selection View -->
+            <div id="hourSelectionView" class="text-center">
+                <p class="text-gray-300 mb-4 text-lg">Step 1: Choose the Hour</p>
+                
+                <div id="clockFace" class="clock-face">
+                    <!-- Hour marks injected by generateHourMarks() -->
+                </div>
+                
+                <p class="text-sm text-gray-400 mt-6">Click an hour marker above to continue to minutes.</p>
+            </div>
+
+            <!-- Step 2: Minute Selection View -->
+            <div id="minuteSelectionView" class="hidden text-center">
+                <p class="text-gray-300 mb-6 text-lg">Step 2: Choose the Minute</p>
+                
+                <div class="flex justify-center space-x-4">
+                    <button onclick="selectMinute(0)" class="bg-indigo-600 text-white text-xl font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition shadow-lg">
+                        :00
+                    </button>
+                    <button onclick="selectMinute(15)" class="bg-indigo-600 text-white text-xl font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition shadow-lg">
+                        :15
+                    </button>
+                    <button onclick="selectMinute(30)" class="bg-indigo-600 text-white text-xl font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition shadow-lg">
+                        :30
+                    </button>
+                    <button onclick="selectMinute(45)" class="bg-indigo-600 text-white text-xl font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition shadow-lg">
+                        :45
+                    </button>
+                </div>
+
+                <p class="text-sm text-gray-400 mt-6">Selecting minutes confirms the time.</p>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button onclick="closeTimeSelectModal()" 
+                    class="bg-gray-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-gray-600 transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
