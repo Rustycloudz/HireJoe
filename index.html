@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>Joe's Resume and Blog</title>
 
     <style>
@@ -17,7 +17,7 @@
         }
 
         h1, h2, h3 {
-            color: #502826 /* A Deep Contrast */
+            color: #502826; /* A Deep Contrast */
             margin-top: 0;
         }
 
@@ -31,7 +31,7 @@
         }
 
         .header-data h1 {
-            font-size: 2.5em;
+            font-size: 2em; /* Reduced for better fit on small screens */
             margin-bottom: 5px;
         }
 
@@ -39,30 +39,38 @@
             font-style: italic;
             color: rgba(63, 102, 151, 0.95);
             margin-bottom: 10px;
+            font-size: 1em; /* Ensure readability */
         }
 
         .contact-info a {
             color: #502826;
             text-decoration: none;
-            margin: 0 5px;
+            /* Increased spacing for touch targets */
+            margin: 0 8px;
+            padding: 5px 0; 
+            display: inline-block; /* Allows padding for better touch */
         }
 
-        /* Main Layout (Flexbox) */
+        /* Main Layout - Default Mobile-First */
         .resume-container {
             display: flex;
+            flex-direction: column; /* Stacked layout by default (mobile) */
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 10px; /* Reduced side padding for mobile */
         }
 
-        /* Sidebar Navigation */
+        /* Sidebar Navigation - Full width on mobile */
         .sidebar {
-            flex: 0 0 250px; /* Fixed width for sidebar */
-            padding-right: 20px;
-            border-right: 1px solid #ddd;
+            flex: 1 1 100%; /* Takes full width on mobile */
+            padding: 0; /* Remove right padding */
+            border-right: none; /* Remove vertical line */
+            border-bottom: 1px solid #ddd; /* Add a separator at the bottom */
+            margin-bottom: 20px;
         }
 
         .sidebar h2 {
+            text-align: center; /* Center section title on mobile */
             border-bottom: 2px solid #3F6697;
             padding-bottom: 5px;
             margin-bottom: 15px;
@@ -71,33 +79,41 @@
         .nav-list {
             list-style: none;
             padding: 0;
+            display: flex; /* Make the nav items horizontal for a compact mobile menu */
+            flex-wrap: wrap; /* Allow items to wrap if needed */
+            justify-content: center; /* Center the nav items */
+        }
+
+        .nav-list li {
+            margin: 5px; /* Spacing between horizontal links */
         }
 
         .nav-link {
-            display: block;
-            padding: 10px 0;
+            display: inline-block; /* Change from block to inline-block for horizontal layout */
+            padding: 8px 12px; /* Increased padding for better touch targets */
             color: rgba(80, 40, 38, 1.00);
             text-decoration: none;
             transition: background-color 0.2s;
             border-radius: 4px;
+            font-size: 1em; /* Ensure readability */
         }
 
-        .nav-link:hover {
-            background-color: #A8C5C7;
-            padding-left: 5px;
-        }
-
-        .nav-link.active {
-            background-color: #A8C5C7;
+        .nav-link:hover, .nav-link.active {
+            background-color: #3F6697; /* Changed active/hover color for better contrast */
             color: white;
             font-weight: bold;
-            padding-left: 10px;
+            padding-left: 12px;
         }
+        
+        .nav-link.active {
+            padding-left: 12px; /* Reset padding to match horizontal style */
+        }
+
 
         /* Content Area */
         .content-area {
-            flex-grow: 1; /* Takes up remaining space */
-            padding-left: 40px;
+            flex-grow: 1;
+            padding: 0 10px; /* Reduced padding for mobile */
         }
 
         .resume-section {
@@ -127,6 +143,60 @@
         /* Interactivity (Visibility Control) */
         .hidden {
             display: none;
+        }
+
+        /* --- Desktop/Tablet Optimization (Media Query) --- */
+        @media (min-width: 768px) {
+            /* Revert to desktop Flexbox layout */
+            .resume-container {
+                flex-direction: row; /* Horizontal layout for desktop */
+                padding: 0 20px;
+            }
+
+            /* Restore Sidebar to desktop appearance */
+            .sidebar {
+                flex: 0 0 250px; /* Fixed width for sidebar */
+                padding-right: 20px;
+                border-right: 1px solid #ddd;
+                border-bottom: none; /* Remove bottom separator */
+                margin-bottom: 0;
+            }
+
+            .sidebar h2 {
+                text-align: left; /* Revert header alignment */
+            }
+            
+            .nav-list {
+                display: block; /* Stack links vertically */
+            }
+            
+            .nav-list li {
+                margin: 0;
+            }
+
+            .nav-link {
+                display: block; /* Full-width blocks for desktop */
+                padding: 10px 0;
+            }
+            
+            .nav-link:hover, .nav-link.active {
+                padding-left: 5px; /* Restore desktop hover padding */
+            }
+            
+            .nav-link.active {
+                padding-left: 10px;
+            }
+
+
+            /* Restore Content Area padding */
+            .content-area {
+                padding-left: 40px;
+            }
+            
+            /* Restore header font size */
+            .header-data h1 {
+                font-size: 2.5em; 
+            }
         }
     </style>
 </head>
@@ -178,42 +248,34 @@ a cleaner planet and sustainable solutions for the future.</p>
 Zero-Risk Skill Validation: The accumulation of certified competencies serves as a verifiable benchmark of focus and mastery. This systematic approach significantly reduces the deployment risk and guarantees unparalleled speed-to-impact compared to candidates relying solely on abstract, non-validated experience.
 
 Modular Architecture: The deliberate stacking of specialized credentials proves the ability to quickly assemble and configure complex technical knowledge. This demonstrates the capacity for rapidly mastering any new, complementary skill set essential for a specific role.</p>
-                   <h4>Adaptive Fluency in Next-Generation Systems</h4>
-                   <p>The core value proposition is the ability to master methodology over mere frameworks, ensuring persistent relevance in the volatile technological landscape.
+                    <h4>Adaptive Fluency in Next-Generation Systems</h4>
+                    <p>The core value proposition is the ability to master methodology over mere frameworks, ensuring persistent relevance in the volatile technological landscape.
 
 AI Methodological Fluency: The focus on AI/ML micro-credentials proves mastery over data-centric methodologies and the underlying computational principles required for modern software engineering. This foundational understanding allows for the rapid integration and effective utilization of any emerging GenAI tool or proprietary system as needed by the organization.
 
 Critical Operational Differentiator: This continuous, certified learning is the single most reliable predictor of organizational success in a field defined by constant change. The capacity to be rapidly trained to the exact specifications of the firm provides a decisive, future-proof advantage.</p>
-                  
-                   <h4> Continuous Relevance through Perpetual Optimization (Kaizen)</h4>
-                   <p>The candidate is committed to the philosophical and operational practice of Kaizen—the continuous, incremental optimization of capability. This is not simply adaptive behavior; it is a strategic operating mandate.
+                    <h4> Continuous Relevance through Perpetual Optimization (Kaizen)</h4>
+                    <p>The candidate is committed to the philosophical and operational practice of Kaizen—the continuous, incremental optimization of capability. This is not simply adaptive behavior; it is a strategic operating mandate.
 
 Proactive Future-Proofing: This discipline of ongoing credentialing demonstrates that the developer is inherently resistant to technical obsolescence.
 
 Strategic Capacity: The hiring of this profile secures an asset whose proven mechanism for rapid specialization ensures the organization will always have the precise, current technical competency required to navigate new market demands and competitive threats.</p>
-                    
-
-
-                
                 </div>
                 </article>
 
             <article class="resume-section hidden" data-section="projects">
                 <h2>Key Projects (HTML/JS Utilities)</h2>
                 
-                <!-- Existing Project - Enhanced Description -->
                 <div class="project-entry">
                     <h3>Gamified Task Manager<a href="rhea_3_10_14_25.html">(View Project)</a></h3>
                     <p class="description">A responsive web application, developed using **HTML, CSS, and vanilla JavaScript**, designed to transform daily chores into a point-based experience. Features user authentication (mock) and real-time task completion tracking. This tool demonstrates proficiency in front-end state management and DOM manipulation.</p>
                 </div>
                 
-                <!-- Updated Project Entry: Color Palette Generator -->
                 <div class="project-entry">
                     <h3>Optimized Color Palette Generator<a href="styler.html">(View Project)</a></h3>
                     <p class="description">A client-side utility, leveraging **HTML and advanced HSL color space manipulation in JavaScript**, designed for rapid generation of harmonious, accessible color palettes. It demonstrates advanced understanding of color theory implementation for UI/UX design and features instant HEX/RGB/HSL conversion.</p>
                 </div>
 
-                <!-- Updated Project Entry: Themed Voice Notes Recorder -->
                 <div class="project-entry">
                     <h3>Themed Voice Notes Recorder<a href="captains_log.html">(View Project)</a></h3>
                     <p class="description">A browser-based recording utility designed for asynchronous data capture, utilizing the **MediaDevices API** for audio input and local storage for persistence. This project demonstrates direct interaction with browser hardware resources and efficient management of streaming media data within a themed interface, proving competence in low-level web API control.</p>
@@ -250,13 +312,50 @@ Visualize Your Data | Sololearn | 2025<br>
 AI-Powered A/B Testing | Sololearn | 2025<br>
 Data Literacy with AI | Sololearn | 2025<br>
 Social Media Marketting with AI | Sololearn | 2025<br>
+Introduction to HTML | Sololearn | 2025<br>
+Generative AI in Practice | Sololearn | 2025<br>
+Research with AI | Sololearn | 2025<br>
+Data Analytics with AI | Sololearn | 2025<br>
+Vibe Coding | Sololearn | 2025<br>
 Bitcoin for Beginners | App-Learning GmbH | 2024<br>
 XRP Ledger 464 | EasyA | 2025<br>
 XRP Ledger 121 | EasyA | 2025<br>
 XRP Ledger 433 | EasyA | 2025<br>
 XRP Ledger 472 | EasyA | 2025<br>
 XRP Ledger 244 | EasyA | 2025<br>
-SKILL DOTS608 (Introductory to Polkadot Ecosystem) | EasyA | 2024</p>
+XRP Ledger 029 | EasyA | 2025<br>
+XRP Ledger 602 | EasyA | 2025<br>
+XRP Ledger 621 | EasyA | 2025<br>
+XRP Ledger 081 | EasyA | 2025<br>
+XRP Ledger 578 | EasyA | 2025<br>
+XRP Ledger 045 | EasyA | 2025<br>
+XRP Ledger 532 | EasyA | 2025<br>
+Light Speed (Solana) 575 | EasyA | 2025<br>
+Light Speed (Solana) 549 | EasyA | 2025<br>
+Light Speed (Solana) 390 | EasyA | 2025<br>
+Light Speed (Solana) 798 | EasyA | 2025<br>
+Light Speed (Solana) 422 | EasyA | 2025<br>
+
+Soroban 041 | EasyA | 2025<br>
+Soroban 638 | EasyA | 2025<br>
+VeChain 806 | EasyA | 2025<br>
+VeChain 457 | EasyA | 2025<br>
+VeChain 314 | EasyA | 2025<br>
+VeChain 976 | EasyA | 2025<br>
+VeChain 025 | EasyA | 2025<br>
+VeChain 800 | EasyA | 2025<br>
+VeChain 388 | EasyA | 2025<br>
+VeChain 382 | EasyA | 2025<br>
+VeChain 234 | EasyA | 2025<br>
+VeChain 687 | EasyA | 2025<br>
+VeChain 364 | EasyA | 2025<br>
+VeChain 038 | EasyA | 2025<br>
+VeChain 695 | EasyA | 2025<br>
+VeChain 902 | EasyA | 2025<br>
+VeChain 040 | EasyA | 2025<br>
+SUI 849 | EasyA | 2025<br>
+
+DOTS(Polkadot)608 | EasyA | 2024</p>
                 </div>
             </article>
 
